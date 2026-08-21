@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>勿忘我 · 團錄</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Serif+TC:wght@400;500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2a2118;
+    --ink-soft:#4a3f30;
+    --parchment:#ece0c4;
+    --parchment-edge:#d9c7a2;
+    --blood:#7a2e2e;
+    --gold:#ad8a3f;
+    --gold-bright:#d4af5f;
+    --corruption:0;
+    --scene-a:#10151a;
+    --scene-b:#1c2530;
+    --scene-accent:#5a6b78;
+    --transition-speed:1.4s;
+  }
+  @media (prefers-reduced-motion:reduce){
+    :root{ --transition-speed:0.05s; }
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; }
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Noto Serif TC', serif;
+    color:var(--parchment);
+    overflow-x:hidden;
+  }
+
+  /* ---------- 背景層：依場景切換 ---------- */
+  .bg-layer{
+    position:fixed; inset:0; z-index:-2;
+    background:
+      radial-gradient(ellipse at 30% 20%, color-mix(in srgb, var(--scene-accent) 35%, transparent), transparent 60%),
+      linear-gradient(160deg, var(--scene-a), var(--scene-b) 70%);
+    transition: background var(--transition-speed) ease;
+  }
+  .bg-grain{
+    position:fixed; inset:0; z-index:-1;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, transparent 1px, transparent 3px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.08) 0px, transparent 1px, transparent 4px);
+    mix-blend-mode:overlay;
+    opacity:0.35;
+    pointer-events:none;
+  }
+  .bg-vignette{
+    position:fixed; inset:0; z-index:-1;
+    pointer-events:none;
+    box-shadow: inset 0 0 18vw 4vw rgba(0,0,0, calc(0.45 + var(--corruption) * 0.35));
+    background: radial-gradient(ellipse at center,
+      transparent 40%,
+      color-mix(in srgb, var(--blood) calc(var(--corruption) * 55%), transparent) 100%);
+    transition: box-shadow 0.8s ease, background 0.8s ease;
+  }
+
+  /* 各場景色調 */
+  body[data-scene="cover"] .bg-layer{
+  background: #7a7462;
+	}
+  body[data-scene="prologue"]{ --scene-a:#5C5C5C; --scene-b:#4D4D4D; --scene-accent:#8F8F8F; }
+  body[data-scene="manor"] .bg-layer{
+  background-image: linear-gradient(rgba(10,8,5,0.55), rgba(10,8,5,0.75)), url('https://images.plurk.com/7vCdBNQzwoVjYAPNiMgfbN.png');
+  background-size: cover;
+  background-position: center;
+	}
+  body[data-scene="road"] .bg-layer{
+  background-image: linear-gradient(rgba(10,8,5,0.55), rgba(10,8,5,0.75)), url('https://images.plurk.com/13GBgXnkxWF7tV90jTsrls.jpg');
+  background-size: cover;
+  background-position: center;
+	}
+  
+   /* 角色卡 */
+  .characters{ padding-top:5.5rem; scroll-margin-top:2rem; min-height:92vh; }
+.character-grid{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:1.4rem; max-width:60em; margin-top:2rem;
+}
+.character-card{
+  background:linear-gradient(160deg, rgba(236,224,196,0.06), rgba(236,224,196,0.02));
+  border:1px solid rgba(212,175,95,0.14);
+  border-radius:4px; padding:1.4rem 1rem; text-align:center;
+}
+.character-portrait{
+  width:88px; height:88px; border-radius:50%; object-fit:cover;
+  border:2px solid var(--gold-bright); margin-bottom:0.8rem;
+}
+.character-name{ font-weight:600; font-size:1rem; margin-bottom:0.2rem; }
+.character-role{ font-family:'Special Elite', monospace; font-size:0.68rem; color:rgba(236,224,196,0.5); margin-bottom:0.7rem; }
+.character-bio{ font-size:0.85rem; line-height:1.75; color:rgba(236,224,196,0.8); }
+
+  /* ---------- 版面 ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:240px minmax(0,1fr);
+    max-width:1180px;
+    margin:0 auto;
+    min-height:100vh;
+  }
+  
+  .top-nav{
+  display:flex; justify-content:space-between; align-items:center;
+  max-width:1180px; margin:0 auto;
+  padding:1.4rem 1.5rem 0;
+}
+.top-nav-btn{
+  font-family:'Special Elite', monospace;
+  font-size:0.72rem; letter-spacing:0.08em;
+  color:rgba(236,224,196,0.65);
+  text-decoration:none;
+  border:1px solid rgba(212,175,95,0.35);
+  border-radius:2px;
+  padding:0.4rem 0.9rem;
+  background:rgba(10,9,7,0.35);
+  transition:color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+}
+.top-nav-btn:hover{ color:var(--gold-bright); border-color:var(--gold-bright); background:rgba(212,175,95,0.1); }
+.top-nav-index{ margin-left:auto; }
+
+  /* 左側場景時間軸 */
+  .rail{
+    position:sticky; top:0; align-self:start;
+    height:100vh;
+    padding:4.5rem 1.2rem 2rem;
+    display:flex; flex-direction:column; gap:1.6rem;
+    border-right:1px solid rgba(212,175,95,0.18);
+  }
+  .rail-title{
+    font-family:'Cinzel', 'Noto Serif TC', serif;
+    font-size:0.72rem; letter-spacing:0.28em;
+    color:var(--gold-bright); opacity:0.75;
+    margin-bottom:0.4rem;
+  }
+  .rail-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+  .rail-item{ position:relative; padding:0.65rem 0 0.65rem 1.4rem; }
+  .rail-item::before{
+    content:""; position:absolute; left:0.28rem; top:0; bottom:0;
+    width:1px; background:rgba(212,175,95,0.22);
+  }
+  .rail-item:first-child::before{ top:50%; }
+  .rail-item:last-child::before{ bottom:50%; }
+  .rail-dot{
+    position:absolute; left:0; top:1.05rem;
+    width:0.55rem; height:0.55rem; border-radius:50%;
+    background:var(--ink-soft); border:1px solid rgba(212,175,95,0.4);
+    transition:all 0.35s ease;
+  }
+  .rail-btn{
+    background:none; border:none; text-align:left; width:100%;
+    font-family:'Noto Serif TC', serif; font-size:0.86rem;
+    color:rgba(236,224,196,0.55); cursor:pointer; line-height:1.5;
+    transition:color 0.3s ease;
+  }
+  .rail-btn .tag{
+    display:block; font-size:0.66rem; letter-spacing:0.14em;
+    color:rgba(212,175,95,0.55); margin-bottom:0.15rem;
+  }
+  .rail-item.active .rail-btn{ color:var(--parchment); }
+  .rail-item.active .rail-dot{ background:var(--gold-bright); box-shadow:0 0 8px var(--gold-bright); }
+  .rail-item.active .rail-btn .tag{ color:var(--gold-bright); }
+
+  /* ---------- 主要內容 ---------- */
+  .main{ padding:0 1.5rem 8rem; }
+
+  .cover{
+    min-height:92vh; display:flex; flex-direction:column; justify-content:center;
+    padding:3rem 1rem; position:relative;
+  }
+  .cover-seal{ width:58px; height:58px; margin-bottom:1.6rem; opacity:0.85; }
+  .cover-eyebrow{ font-family:'Cinzel', serif; font-size:0.75rem; letter-spacing:0.4em; color:var(--gold-bright); margin-bottom:0.8rem; }
+  .cover-title{
+    font-family:'Noto Serif TC', serif; font-weight:700;
+    font-size:clamp(2.2rem, 6vw, 3.6rem); line-height:1.25; margin:0 0 1rem;
+    text-shadow:0 2px 24px rgba(0,0,0,0.5);
+  }
+  .cover-desc{ max-width:38em; color:rgba(236,224,196,0.72); line-height:1.9; font-size:0.98rem; }
+  .cover-meta{
+    display:flex; flex-wrap:wrap; gap:1.6rem; margin-top:2.2rem;
+    font-family:'Special Elite', monospace; font-size:0.78rem; color:rgba(236,224,196,0.55);
+  }
+  .cover-meta span b{ display:block; color:var(--gold-bright); font-weight:400; font-size:0.68rem; letter-spacing:0.12em; margin-bottom:0.2rem; }
+
+  .scene-section{ padding-top:5.5rem; scroll-margin-top:2rem; }
+  .scene-header{ margin-bottom:2.2rem; }
+  .scene-tag{ font-family:'Cinzel', serif; font-size:0.72rem; letter-spacing:0.3em; color:var(--gold-bright); }
+  .scene-title{ font-size:clamp(1.5rem, 3.4vw, 2.1rem); margin:0.3rem 0 0.4rem; font-weight:600; }
+  .scene-loc{ font-family:'Special Elite', monospace; font-size:0.78rem; color:rgba(236,224,196,0.5); }
+
+  .entries{ display:flex; flex-direction:column; gap:1.1rem; max-width:52em; }
+
+  .entry-narration{
+    font-style:italic; line-height:2; color:rgba(236,224,196,0.82);
+    padding-left:1.1rem; border-left:2px solid rgba(212,175,95,0.28);
+    font-size:0.97rem;
+  }
+
+  .dialogue-row{
+  display:flex; gap:0.8rem; align-items:flex-start;
+  max-width:85%;
+  }
+  .dialogue-row.is-kp{ margin-left:auto; }
+
+  .entry-dialogue{
+  flex:1; min-width:0;
+  background:linear-gradient(160deg, rgba(236,224,196,0.06), rgba(236,224,196,0.02));
+  border:1px solid rgba(212,175,95,0.14);
+  border-radius:4px;
+  padding:0.9rem 1.1rem;
+  }
+  .entry-dialogue.is-kp{ background:linear-gradient(160deg, rgba(173,138,63,0.14), rgba(173,138,63,0.03)); }
+
+  .entry-avatar{
+  width:44px; height:44px; flex:none;
+  margin-top:0.15rem;
+  border-radius:4px; object-fit:cover;
+  border:1px solid rgba(212,175,95,0.35);
+  }
+
+  .entry-dialogue.is-kp .speaker{ color:#007336; }
+  .speaker{ font-size:0.78rem; font-weight:600; letter-spacing:0.04em; margin-bottom:0.35rem; }
+  .dialogue-text{ line-height:1.85; font-size:0.98rem; color:rgba(236,224,196,0.92); }
+  .dialogue-image{
+  display:block;
+  max-width:100%;
+  border-radius:3px;
+  margin-top:0.2rem;
+  }
+
+  .entry-roll{
+    align-self:flex-start;
+    font-family:'Special Elite', monospace;
+    font-size:0.8rem;
+    color:var(--parchment);
+    background:rgba(0,0,0,0.22);
+    border:1px dashed rgba(212,175,95,0.4);
+    padding:0.55rem 0.9rem;
+    transform:rotate(-0.6deg);
+    letter-spacing:0.03em;
+  }
+  .entry-roll.fail{ border-color:rgba(122,46,46,0.7); color:#e8b3ab; }
+  .entry-roll .san-delta{ margin-left:0.6rem; color:var(--gold-bright); }
+  .entry-roll.crit{
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+  box-shadow: 0 0 10px rgba(212,175,95,0.45), inset 0 0 6px rgba(212,175,95,0.12);
+  animation: crit-pulse 1.6s ease-in-out infinite;
+}
+.crit-badge{
+  margin-left:0.6rem;
+  padding:0.05rem 0.45rem;
+  border:1px solid var(--gold-bright);
+  border-radius:2px;
+  font-size:0.7rem;
+  letter-spacing:0.12em;
+}
+@keyframes crit-pulse{
+  0%,100%{ box-shadow:0 0 6px rgba(212,175,95,0.3); }
+  50%{ box-shadow:0 0 16px rgba(212,175,95,0.75); }
+}
+
+  .divider{
+    display:flex; align-items:center; gap:0.8rem;
+    margin:3rem 0 1rem; color:rgba(212,175,95,0.4);
+    font-family:'Cinzel', serif; font-size:0.68rem; letter-spacing:0.3em;
+  }
+  .divider::before, .divider::after{ content:""; flex:1; height:1px; background:rgba(212,175,95,0.25); }
+
+  footer{ text-align:center; padding:4rem 1rem 2rem; font-size:0.75rem; color:rgba(236,224,196,0.35); font-family:'Special Elite', monospace; }
+
+  /* ---------- 開場遮罩（瀏覽器政策需要一次點擊才能出聲） ---------- */
+  .gate{
+    position:fixed; inset:0; z-index:50;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:1.1rem;
+    background:radial-gradient(ellipse at 50% 40%, rgba(20,16,10,0.88), rgba(6,5,4,0.97));
+    backdrop-filter:blur(2px);
+    transition:opacity 0.9s ease;
+    text-align:center; padding:2rem;
+  }
+  .gate.gate-hidden{ opacity:0; pointer-events:none; }
+  .gate-eyebrow{ font-family:'Cinzel', serif; font-size:0.7rem; letter-spacing:0.32em; color:rgba(212,175,95,0.7); }
+  .gate-btn{
+    font-family:'Noto Serif TC', serif; font-size:1rem; letter-spacing:0.06em;
+    color:var(--parchment); background:rgba(212,175,95,0.08);
+    border:1px solid rgba(212,175,95,0.5); border-radius:2px;
+    padding:0.8rem 2.2rem; cursor:pointer;
+    transition:background 0.3s ease, transform 0.3s ease;
+  }
+  .gate-btn:hover{ background:rgba(212,175,95,0.18); transform:translateY(-1px); }
+  .gate-note{ font-family:'Special Elite', monospace; font-size:0.72rem; color:rgba(236,224,196,0.4); max-width:24em; }
+
+  /* ---------- 音樂播放器 ---------- */
+  .scroll-nav{
+  position:fixed; left:1.1rem; bottom:1.1rem; z-index:20;
+  display:flex; flex-direction:column; gap:0.5rem;
+}
+.scroll-btn{
+  width:2.4rem; height:2.4rem; border-radius:50%;
+  border:1px solid rgba(212,175,95,0.4);
+  background:rgba(10,9,7,0.65);
+  color:var(--gold-bright);
+  font-size:1rem;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  backdrop-filter:blur(4px);
+  opacity:0; pointer-events:none;
+  transition:opacity 0.3s ease, background 0.3s ease, transform 0.3s ease;
+}
+.scroll-btn.visible{ opacity:1; pointer-events:auto; }
+.scroll-btn:hover{ background:rgba(212,175,95,0.18); transform:translateY(-2px); }
+
+@media (max-width:860px){
+  .scroll-nav{ left:0.6rem; bottom:0.6rem; }
+}
+  
+  .music-widget{
+    position:fixed; right:1.1rem; bottom:1.1rem; z-index:20;
+    display:flex; align-items:center; gap:0.7rem;
+    background:rgba(10,9,7,0.72);
+    border:1px solid rgba(212,175,95,0.28);
+    border-radius:3px;
+    padding:0.55rem 0.9rem;
+    backdrop-filter:blur(4px);
+  }
+  .music-toggle{
+    width:2rem; height:2rem; flex:none; border-radius:50%;
+    border:1px solid rgba(212,175,95,0.45); background:rgba(212,175,95,0.08);
+    color:var(--gold-bright); font-size:0.85rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background 0.3s ease;
+  }
+  .music-toggle:hover{ background:rgba(212,175,95,0.2); }
+  .music-info{ display:flex; flex-direction:column; gap:0.3rem; min-width:8.5rem; }
+  .music-track{ font-family:'Special Elite', monospace; font-size:0.68rem; letter-spacing:0.03em; color:rgba(236,224,196,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #volumeSlider{ width:100%; accent-color:var(--gold-bright); height:3px; }
+
+  @media (max-width:860px){
+    .music-widget{ right:0.6rem; bottom:0.6rem; padding:0.45rem 0.7rem; }
+    .music-info{ min-width:6.5rem; }
+  }
+
+  /* ---------- RWD ---------- */
+  @media (max-width:860px){
+    .layout{ grid-template-columns:1fr; }
+    .rail{
+      position:sticky; top:0; height:auto; width:100%;
+      flex-direction:row; align-items:center; gap:0;
+      padding:0.8rem 0.6rem; overflow-x:auto;
+      border-right:none; border-bottom:1px solid rgba(212,175,95,0.18);
+      background:rgba(10,10,10,0.55); backdrop-filter:blur(6px);
+      z-index:5;
+    }
+    .rail-title, .san-meter{ display:none; }
+    .rail-list{ flex-direction:row; gap:0.2rem; }
+    .rail-item{ padding:0.4rem 0.9rem; white-space:nowrap; }
+    .rail-item::before{ display:none; }
+    .rail-dot{ display:none; }
+    .cover{ min-height:70vh; }
+    .entry-dialogue{ max-width:100%; }
+  }
+</style>
+</head>
+<body data-scene="cover">
+
+<div class="scroll-nav">
+  <button class="scroll-btn" id="scrollTopBtn" aria-label="回到頂端" title="回到頂端">↑</button>
+  <button class="scroll-btn" id="scrollBottomBtn" aria-label="前往底部" title="前往底部">↓</button>
+</div>
+
+<div class="gate" id="gate">
+  <div class="gate-eyebrow">CASE FILE SEALED</div>
+  <button class="gate-btn" id="gateBtn">翻開卷宗，開始播放</button>
+  <p class="gate-note">瀏覽器規定音訊需在使用者操作後才能播放，點擊後將開啟隨場景切換的環境音樂。</p>
+</div>
+
+<div class="music-widget">
+  <button class="music-toggle" id="muteBtn" aria-label="靜音切換" title="靜音切換">♪</button>
+  <div class="music-info">
+    <div class="music-track" id="musicTrack">— 尚未播放 —</div>
+    <input type="range" id="volumeSlider" min="0" max="100" value="40" aria-label="音量">
+  </div>
+</div>
+
+<div class="bg-layer"></div>
+<div class="bg-grain"></div>
+<div class="bg-vignette"></div>
+
+<nav class="top-nav">
+  <a class="top-nav-btn top-nav-index" href="index.html">總覽 目錄</a>
+  <a class="top-nav-btn" href="forgetmenot2.html">下一頁 →</a>
+</nav>
+
+<div class="layout">
+  <!-- 左側：場景時間軸 + SAN 追蹤 -->
+  <nav class="rail">
+    <div class="rail-title">橋 段 目 錄</div>
+    <ul class="rail-list" id="railList"></ul>
+  </nav>
+
+  <!-- 右側：內容 -->
+  <main class="main">
+    <section class="cover" data-scene="cover">
+      <svg class="cover-seal" viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="46" stroke="#d4af5f" stroke-width="1"/>
+        <path d="M50 12 L83 68 L17 68 Z" stroke="#d4af5f" stroke-width="1" fill="none"/>
+        <circle cx="50" cy="55" r="12" stroke="#d4af5f" stroke-width="1" fill="none"/>
+        <circle cx="50" cy="55" r="3" fill="#d4af5f"/>
+      </svg>
+      <div class="cover-eyebrow">CALL OF CTHULHU · 團 錄</div>
+      <h1 class="cover-title">勿忘我</h1>
+      <p class="cover-desc">
+        你清晰地聽到自己的呼吸聲。<br>
+		四周異常的安靜，只有引擎在悄悄作響。你睜開眼睛，發現你所乘坐的車子翻車了，而周遭，是你不認得的面孔。<br>
+		你試圖回想這究竟是怎麼一回事，然而劇烈的頭疼阻斷你繼續探索你的記憶……<br>
+		——你發現，你連自己的身份都記不清了。
+		<br><br>
+		為了能找回記憶，弄清真相，你和你不認得的同伴們一起踏上了旅程……
+      </p>
+      <div class="cover-meta">
+        <span><b>KP</b>秦吟唱</span>
+        <span><b>PL</b>溫酒 / 慕煙 / 七葉 / 巴蒂 / 煬 / 歷程</span>
+        <span><b>初次團務</b>2026 / 08 / 13</span>
+        <span><b>規則</b>CoC 7th</span>
+      </div>
+    </section>
+	
+	<section class="characters" data-scene="characters">
+	  <div class="scene-header">
+      <div class="scene-tag">角色介紹</div>
+      <h2 class="scene-title">參與調查員</h2>
+    </div>
+    <div class="character-grid">
+    <div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/7g1Ti37JHMWxLQtoK0A0vL.png" alt="卡繆 · 福克斯">
+      <div class="character-name" style="color:#E6A08C">卡繆 · 福克斯</div>
+      <div class="character-role">音效工程師</div>
+      <p class="character-bio">音帶受損，很愛笑的大型犬。</p>
+    </div>
+    <div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/25zBoSztBIZeRz6sHo9CH2.png" alt="塞勒 · 弗洛斯特">
+      <div class="character-name" style="color:#75BD99">塞勒 · 弗洛斯特</div>
+      <div class="character-role">主持嘉賓 - 心理學家</div>
+      <p class="character-bio">少話，討厭吵鬧的地方，不過有看其他人被未知事物嚇到的惡趣味。</p>
+    </div>
+	<div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/584gt4LvuKVem3p7kmseXr.png" alt="維塔斯 · 卡爾德">
+      <div class="character-name" style="color:#9BABE0">維塔斯 · 卡爾德</div>
+      <div class="character-role">攝影師</div>
+      <p class="character-bio">看上去吊兒郎當的傢伙，但對世界保持著赤誠的好奇心。</p>
+    </div>
+	<div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/4xtKtx9VmkHd58VJ5TJe8A.png" alt="奧托 · 席爾維斯特">
+      <div class="character-name" style="color:#B0B0B0">奧托 · 席爾維斯特</div>
+      <div class="character-role">主持嘉賓 - 超自然專家</div>
+      <p class="character-bio">自來熟的大塊頭，似乎在玄學方面有相當的研究，但可靠性有待商榷。</p>
+    </div>
+	<div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/6eI9WTVxPvJ2eXrsbL90NE.png" alt="德里安 · 溫斯頓">
+      <div class="character-name" style="color:#00BCD4">德里安 · 溫斯頓</div>
+      <div class="character-role">主持人</div>
+      <p class="character-bio">肢體語言豐富，口才非常匹配自己的職業。</p>
+    </div>
+	<div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/547yMydNur7P28nAMLJqu2.png" alt="諾倫 · 斯圖爾特">
+      <div class="character-name" style="color:#E9A368">諾倫 · 斯圖爾特</div>
+      <div class="character-role">主持嘉賓 - 科學專家</div>
+      <p class="character-bio">冷靜、禮貌，符合刻板印象的科學專家，但好像相信靈異事件的存在？</p>
+    </div>
+    <!-- 依此格式為其他四位角色各加一張卡片 -->
+    </div>
+	</section>
+
+    <div id="scenesRoot"></div>
+
+    <footer>
+	— 本頁就此告一段落 —
+	<div style="margin-top:1rem;">
+    <a href="forgetmenot2.html" style="color:var(--gold-bright); text-decoration:none;">前往下一場 →</a>
+    </div>
+	</footer>
+  </main>
+</div>
+
+<script>
+/* =========================================================
+   資料結構說明（之後要換成自己的團錄，只需要改這個陣列）
+   scenes: 一個橋段 = 一個場景（會切換背景與時間軸項目）
+     id        : 對應 body[data-scene] 與 CSS 場景色調
+     tag       : 時間軸上顯示的小標（如「序章」「第一章」）
+     title     : 場景標題
+     location  : 地點／時間戳
+     entries   : 該場景內的逐條紀錄，type 可為：
+        narration : 旁白／場景描述  { type, text }
+        dialogue  : 對話            { type, speaker, color, text, isKP? }
+        roll      : 擲骰／檢定紀錄  { type, text, success, sanDelta? }
+   ========================================================= */
+const CHARACTER_AVATARS = {
+  '卡繆 · 福克斯': 'https://images.plurk.com/7g1Ti37JHMWxLQtoK0A0vL.png',
+  '塞勒 · 弗洛斯特': 'https://images.plurk.com/25zBoSztBIZeRz6sHo9CH2.png',
+  '維塔斯 · 卡爾德': 'https://images.plurk.com/584gt4LvuKVem3p7kmseXr.png',
+  '奧托 · 席爾維斯特': 'https://images.plurk.com/4xtKtx9VmkHd58VJ5TJe8A.png',
+  '德里安 · 溫斯頓': 'https://images.plurk.com/6eI9WTVxPvJ2eXrsbL90NE.png',
+  '諾倫 · 斯圖爾特': 'https://images.plurk.com/547yMydNur7P28nAMLJqu2.png',
+  '貝克先生': 'https://images.plurk.com/5FKbTMs3DaAM0nopFYDzfX.png',
+  '貝克夫人': 'https://images.plurk.com/7zoZSveD6Z1QmI3L8EAErE.png',
+};
+   
+const SCENES = [
+  {
+    id:'prologue', tag:'場前擲骰', title:'……', location:'……',
+    /* music: 留空(null/省略)＝沿用前一場音樂不切換；填參數＝切到新的合成環境音
+       若想改用真實音檔，把整個 music 物件換成 {type:'file', url:'你的.mp3'} 即可 */
+    music:{ type:'file', url:'', label:'……' },
+    entries:[
+      {type:'dialogue', speaker:'KP', isKP:true, text:'全員【體質】'},
+      {type:'roll', text:'【卡繆 · 福克斯】體質 檢定 CC ≤ 80 → 擲出 31，困難成功。', success:true},
+      {type:'roll', text:'【塞勒 · 弗洛斯特】體質 檢定 CC ≤ 50 → 擲出 49，一般成功。', success:true},
+      {type:'roll', text:'【維斯塔 · 卡爾德】體質 檢定 CC ≤ 75 → 擲出 41，一般成功。', success:true},
+      {type:'roll', text:'【奧托 · 席爾維斯特】體質 檢定 CC ≤ 80 → 擲出 81，失敗。', success:false},
+      {type:'roll', text:'【德里安 · 溫斯頓】體質 檢定 CC ≤ 50 → 擲出 39，一般成功。', success:true},
+	  {type:'roll', text:'【諾倫 · 斯圖爾特】體質 檢定 CC ≤ 55 → 擲出 47，一般成功。', success:true},
+      {type:'dialogue', speaker:'KP', isKP:true, text:'全員【幸運】'},
+	  {type:'roll', text:'【卡繆 · 福克斯】幸運 檢定 CC ≤ 90 → 擲出 41，困難成功。', success:true},
+      {type:'roll', text:'【塞勒 · 弗洛斯特】幸運 檢定 CC ≤ 85 → 擲出 95，失敗。', success:false},
+	  {type:'roll', text:'【維斯塔 · 卡爾德】幸運 檢定 CC ≤ 80 → 擲出 69，一般成功。', success:true},
+      {type:'roll', text:'【奧托 · 席爾維斯特】幸運 檢定 CC ≤ 65 → 擲出 92，失敗。', success:false},
+      {type:'roll', text:'【德里安 · 溫斯頓】幸運 檢定 CC ≤ 70 → 擲出 84，失敗。', success:false},
+      {type:'roll', text:'【諾倫 · 斯圖爾特】幸運 檢定 CC ≤ 85 → 擲出 91，失敗。', success:false},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'全員【幸運】'},
+	  {type:'roll', text:'【卡繆 · 福克斯】幸運 檢定 CC ≤ 90 → 擲出 64，一般成功。', success:true},
+      {type:'roll', text:'【塞勒 · 弗洛斯特】幸運 檢定 CC ≤ 85 → 擲出 59，一般成功。', success:true},
+	  {type:'roll', text:'【維斯塔 · 卡爾德】幸運 檢定 CC ≤ 80 → 擲出 35，困難成功。', success:true},
+      {type:'roll', text:'【奧托 · 席爾維斯特】幸運 檢定 CC ≤ 65 → 擲出 71，失敗。', success:false},
+      {type:'roll', text:'【德里安 · 溫斯頓】幸運 檢定 CC ≤ 70 → 擲出 84，失敗。', success:false},
+      {type:'roll', text:'【諾倫 · 斯圖爾特】幸運 檢定 CC ≤ 85 → 擲出 35，困難成功。', success:true},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'全員【SANc 1/1d8】'},
+	  {type:'roll', text:'【卡繆 · 福克斯】SANc 檢定 CC ≤ 70 → 擲出 80，失敗。', success:false},
+	  {type:'roll', text:'【卡繆 · 福克斯】1D8 > 7', success:true},
+      {type:'roll', text:'【塞勒 · 弗洛斯特】SANc 檢定 CC ≤ 70 → 擲出 68，一般成功。', success:true},
+	  {type:'roll', text:'【維斯塔 · 卡爾德】SANc 檢定 CC ≤ 65 → 擲出 27，困難成功。', success:true},
+      {type:'roll', text:'【奧托 · 席爾維斯特】SANc 檢定 CC ≤ 70 → 擲出58，一般成功。', success:true},
+      {type:'roll', text:'【德里安 · 溫斯頓】SANc 檢定 CC ≤ 80 → 擲出 43，一般成功。', success:true},
+      {type:'roll', text:'【諾倫 · 斯圖爾特】SANc 檢定 CC ≤ 80 → 擲出 53，一般成功。', success:true},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'全員【SANc 1d6+3/1d20+3】'},
+	  {type:'roll', text:'【卡繆 · 福克斯】SANc 檢定 CC ≤ 70 → 擲出 27，困難成功。', success:true},
+	  {type:'roll', text:'【卡繆 · 福克斯】1d6+3 > [6]+3 > 9', success:true},
+      {type:'roll', text:'【塞勒 · 弗洛斯特】SANc 檢定 CC ≤ 70 → 擲出 77，失敗。', success:false},
+      {type:'roll', text:'【塞勒 · 弗洛斯特】1d20+3 > [18]+3 > 21', success:true},
+	  {type:'roll', text:'【維斯塔 · 卡爾德】SANc 檢定 CC ≤ 65 → 擲出 58，一般成功。', success:true},
+	  {type:'roll', text:'【維斯塔 · 卡爾德】1d6+3 > [6]+3 > 9', success:true},
+      {type:'roll', text:'【奧托 · 席爾維斯特】SANc 檢定 CC ≤ 70 → 擲出94，失敗。', success:false},
+      {type:'roll', text:'【奧托 · 席爾維斯特】1d20+3 > [13]+3 > 16', success:true},
+      {type:'roll', text:'【德里安 · 溫斯頓】SANc 檢定 CC ≤ 80 → 擲出 29，困難成功。', success:true},
+      {type:'roll', text:'【德里安 · 溫斯頓】1d6+3 > [2]+3 > 5', success:true},
+      {type:'roll', text:'【諾倫 · 斯圖爾特】SANc 檢定 CC ≤ 80 → 擲出 28，困難成功。', success:true},
+      {type:'roll', text:'【諾倫 · 斯圖爾特】1d6+3 > [1]+3 > 4', success:true},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'德里安、維塔斯、諾倫【靈感】'},
+	  {type:'roll', text:'【維斯塔 · 卡爾德】靈感 檢定 CC ≤ 70 → 擲出 83，失敗。', success:false},
+	  {type:'roll', text:'【德里安 · 溫斯頓】靈感 檢定 CC ≤ 75 → 擲出 38，一般成功。', success:true},
+	  {type:'roll', text:'【德里安 · 溫斯頓】CCRT 檢定 → 擲出 恐懼（Phobia）：調查員突如其來地產生一種新的恐懼症，例如幽閉恐懼症、惡靈恐懼症或蟑螂恐懼症。即使恐懼的來源並不在場，他們在接下來的輪數中仍會想像其存在，所有行動都將受到懲罰骰的影響。', success:true},
+	  {type:'roll', text:'【諾倫 · 斯圖爾特】靈感 檢定 CC ≤ 85 → 擲出 86，失敗。', success:false},
+    ]
+  },
+  {
+    id:'manor', tag:'甦醒', title:'不熟悉的夜晚', location:'廂式貨車上',
+    music:{ label:'……' },
+    entries:[
+      {type:'dialogue', speaker:'KP', isKP:true, text:'……'},
+      {type:'dialogue', speaker:'KP', isKP:true, text:'睜開眼。'},
+      {type:'dialogue', speaker:'KP', isKP:true, text:'你發現你在一輛廂式貨車内，和另外的幾個人一起橫七豎八地倒在同一邊，車子似乎呈現快翻倒的狀態。你又在朦朧中四處觀看，發現車裡有各種電線、顯示器、一台報廢的筆記本電腦；各種鏡頭、麥克風；以及其他的低預算 TV 節目能有的小型設備。不過，好像沒有看到攝影機。'},
+      {type:'dialogue', speaker:'KP', isKP:true, text:'卡繆第一個醒了過來，環視了一圈車內的環境，隨後注意力便被身體奪了去——你覺得身上有些痠痛，不過也僅此而已，在這看上去有些不妙的車禍中，你似乎沒有受到太重的傷。'},
+      {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'伸手抓了抓自己的頭髮。將帽子重新戴好，接著扶正了帽子上的兔耳朵。<br><br>——完美的兔耳朵！好耶。<br><br>將兔耳朵完美的擺放好，接著選擇讓其他人繼續睡。伸手開始摸摸自己身上，總覺得自己好像應該有一些可以發出聲音的東西。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'卡繆在自己身上摸了摸，在左邊的口袋摸出了一個音叉，在右邊的口袋裡摸出了一個小型播放器。<br><br>雖然記憶有些模糊，但這些東西應該確實是自己的沒錯。'},
+      {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'他開心的咧嘴笑，不利用聲帶說話已經成為本能。於是拿起音叉開始逐個敲擊發出聲音——大家不會怪啞巴的吧，啞巴只能這樣叫人起床啊。'},
+      {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'頭有點痛。有些不太美妙的橡膠燒焦味道在鼻腔裡橫衝直撞，將維塔斯從不知是睡眠還是昏迷之中喚醒——睜開眼就看見戴著兔耳朵帽子的大塊頭坐在那裡發楞。<br><br>他摸了摸自己的身上，又看了看倒了一片的人，「…………什麼情況？」'},
+      {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'耳膜接收到音叉震動，眼皮緩慢張開，首先將自己的眼鏡戴上，食指指節輕頂鼻橋，使整體落於舒適的位置。還記得他剛加入實驗組時一次外勤也遇到過這種現象，因此並未有太多恐慌。<br><br>其次確認自己是否受傷，再來查看隨身物品是否有遺漏，手套、鑷子、採樣用具等是否還在自己身上。<br><br>喔，對了，還有槍，在這個情況下防身用具還是要在身上比較好。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'諾倫確認了自己的傷勢。<br><br>你能摸到自己臉上的乾凅血跡，額角也如被針扎一般刺痛，不過行動上並沒有太大的不便。<br><br>至於你身上的東西，你憑著一些努力回想起來的記憶一一摸去，至少你當前記得的東西，你都能在自己的身上找到。 '},
+      {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'玩音叉玩的很開心的卡繆笑著搖搖頭，表示自己不知道什麼情況。接著又多敲了幾遍音叉試圖把全車人叫醒。<br><br>空出一隻手摸摸身上有沒有紙筆。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'卡繆摸出了一個小筆記本，翻看一下裡面的內容，似乎就是你平常用來交流的筆記本。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'音叉的聲音強勢的貫穿腦袋，眼皮體驗了一把膝跳反射。<br><br>眼前有些模糊，身上傳來異樣的痛感……剝奪了其他感官，奧托呈現一種彆扭的姿勢醒來，雙手無意識的在身上摸索著，奧托甩了甩腦袋試圖讓自己的思維運轉。<br><br>……我在找什麼？……呃…好像是一個深色的…包？'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'奧托摸了摸身上，一個黑色的斜挎包就帶在你身上，拉鏈是拉上的。'},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'昏暗而密閉的空間讓塞勒有些喘不上氣，他皺著眉環視四周，發現了噪音的來源，一個敲著音叉的大塊頭？或許沒有人想要從某個不知名地點醒來就看到這些。<br><br>塞勒摸了摸外套內裡的口袋，想確認自己的物品都在。<br><br>他想找一本巴掌大的日記。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'塞勒摸了摸身上，想尋找的日記就在外套內襯的口袋裡，右下角好像因為衝突所以被稍微折皺了。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'頭好痛。<br><br>他摸索著一旁的地面，手指又碰了碰周遭試圖適應這種失去控制的無措感。令人茫然的姿勢，他扶著坐了起來。視線總算清晰後，德里安摸過身上外套的口袋和內襯口袋。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'德里安也跟著摸索了起來。你口袋裡的東西頗多——指南針、雙面膠、小型錄音筆……不過你總覺得好像有什麼不在你身上。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'見基本上都醒來了的卡繆準備收起音叉，四處摸摸自己的後背包還在不在。順便將臉貼近了車窗想看看外面。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'卡繆的背包就在你醒來時坐著的座位上，至於車窗外，外面的天色已經暗了下來，還下著雨。<br><br>車看起來側倒在一條溝渠中。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'手摸索到了想找的東西，阿……太好了，包還在。<br>手指向拉鍊探去，試圖拉開拉鍊看看裡面有什麼東西。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'奧托又拉開拉鏈找了一下——塔羅牌、打火機、一疊空白符、證件，還有被掰成一般的壓縮餅乾。<br><br>總覺得好像少了什麼……你發現手機並不在自己身上——現代人哪有不帶手機出門的？你猜測自己應該是把手機漏在什麼地方了。'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'「不影響行動，沒事。」手撫過額角上的傷口，刺痛能夠證明這是現實──我是說大概。<br><br>觀察了一眼附近的人們，大家都在檢查自己的隨身物品，眼下應該找點能證明自己身分的東西，他開始尋找自己身上是否有電子設備或者錢包一類的物品。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'諾倫在身上找到了錢包，錢包裡有一些證件。<br><br>諾倫 · 斯圖爾特，愛爾蘭人，身上的護照似乎也證明了這一點。'},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'塞勒放下心來，但也沒完全放心。和一群陌生人被卡在一群車裡並非一個值得令人安心的狀態，他摸了摸口袋本該放著槍的位置，希望能起碼保證自己的安全。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'塞勒摸到了槍，最好祈禱它不要因為衝擊而變得容易走火。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'怎麼帶了這麼多東西，為什麼我要帶著指南針出門啊？德里安的目光短暫地停留在了掌心幾秒，隨後決定暫時不去追究把它放回去。<br><br>感受到視線抬起頭。「你們誰啊。」'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'見車內所有人都醒了過來，維塔斯開始試圖從散落一地的器械和包裹裡找到屬於自己的那個。他總覺得裡頭應該裝了什麼貴重物品……或許還會有記錄了他為什麼會和這群人在一起的東西？'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'維塔斯在自己屁股下的座位找到了自己的超巨大包包，不過這個包比模糊記憶中的還要更輕，你確信你弄丟了某些東西，仔細回想後，你發現自己裝著攝影器材的內膽包不見了。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'哦——下雨了耶，泥巴地髒髒。<br><br>屈指敲了敲窗戶玻璃後收回了視線，接著伸手撈回自己的包，一邊拉開拉鍊一邊翻閱剛才的筆記本，上面有沒有寫寫什麼，是我用來交流的話應該有一點線索……吧？'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'卡繆翻找自己的包，不過似乎並沒有丟失什麼東西，至於筆記本，除了新的幾頁有揉皺的痕跡以外，好像沒有能說明此前發生什麼的線索。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'看沒有人搭理他，德里安低下頭摸摸褲子口袋和開始翻身上的斜背包。重要的財物和個人物品呢。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'德里安翻了翻斜背包，你感覺有什麼東西遺失了，但想不起來，唯一可以確定的是，你的手機不見了。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'一一確認了包裡的東西，摸索了一遍後，沒有發現手機。<br><br>不，肯定是打開的方式不對。<br><br>再摸了一下，還是沒有，一個依賴於現代社會產物的人類不能容忍手機的不告而別，奧托瞬間清醒了，開始環視著車內尋找手機順便觀察了一下車裡的其他人。'},
+	  {type:'roll', text:'【奧托 · 席爾維斯特】幸運 檢定 CC ≤ 65 → 擲出23，困難成功。', success:true},
+	  {type:'roll', text:'【德里安 · 溫斯頓】幸運 檢定 CC ≤ 70 → 擲出34，困難成功。', success:true},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'奧托和德里安在狹窄的車上看來看去，最後在落車前的踏板上找到了手機，手機上的裂痕有點嚴重，希望螢幕保護貼有起作用。'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'「諾倫・斯圖爾特，如果可以的話，我希望我也能夠知道你們的名字。」他看了一眼自己的護照與證件後，回應了那個金髮男子，至於自己出現在這的理由，自己還回答不上來。<br><br>嘗試打開自己的手機，也許自己有紀錄為什麼會來這裡之類的？總不能是綁架，綁架也不至於什麼都想不起來。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'好吧，那可能應該我們都遇到了綁架吧，搶劫人進車裡還沒開到緬甸之類的。<br><br>隨便定了一個答案的卡繆翻翻黑色後背包裡的錢包，看了看錢包裡的證件確認了自己的名字，然後拿起筆在小筆記本空白的一頁寫下了自己的大名，轉了方向遞到了剛才發問的金髮男眼皮子底下。<br><br>卡繆指了指自己的字。<br><br>——我叫卡繆・福克斯哦^^！'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'完蛋，最貴的那個沒了。<br><br>維塔斯在減重成功的包包裡徒勞無功地翻了幾遍，然後失望的確定了這個事實。他將不知道為什麼混在一堆專業器材裡的撲克牌塞了回去，又從側袋裡找出了自己的錢包和證件——呃，應該是自己的吧？<br><br>「我是……」他翻開駕照看了一眼，「……維塔斯・卡爾德。」'},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'塞勒沒有帶著包，但身上的口袋足夠裝下所有隨身物品，手機沒丟，那便沒什麼大事了。他又四處摸了摸，摸到了另一個小本子，翻出來一看，是本護照，他翻到了有照片的那頁。<br><br>——塞勒 • 弗洛斯特。<br><br>他抬起頭，望向其他人，「我是塞勒，塞勒 • 弗洛斯特。」'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'四處翻找後終於找到了手機，奧托感覺有救了，這才注意到金髮男子的詢問，在包裡翻了翻找到了證件。<br><br>……嗯……奧托・席爾維斯特<br>在包裡而且照片長得跟自己一樣，那就是自己了。<br><br>奧托抬頭對著已經交談起來，還有一個拿著本子的人「你好？我叫奧托・席爾維斯特。」'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'哦！這跟冰箱凍了三天的奶油一樣的空氣總算有點變化了，有人的聲音！<br><br>「德里安・溫斯頓，哦VV......？」剛翻出他的錢包又塞回去，手機一個一個點開來記事本和相簿。看見相簿名稱和照片，又抬起頭看往那個身高挺高的人。「VV？」'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'剛確認了自己的名字和住址，正轉戰手機想得到更多資訊的維塔斯聞聲抬起頭。他看了看手機相冊裡那個金髮男人，又看了看眼前這個和相片上長得一模一樣的傢伙。<br><br>「……你在叫我？」'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆摸了摸自己的喉嚨，遺憾的收回了寫著字的本子。<br><br>好吧、好吧，看來德里安先前應該不認識我？或者不熟，不然怎麼本子都塞過去了還沒有反應。卡繆笑瞇瞇的想著，然後伸手碰了碰報廢的筆記本電腦。<br><br>這可以修嗎？'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'卡繆仔細端詳起壞掉的筆電——修起來的難度太大，可能要定制很多額外的零件才行，以這種程度的損毀來說，一般都會建議對方直接換一台電腦更好。'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'「很高興認識你們。」諾倫將自己的東西收好，查看了一下車子內的設備，也許這裡原本是在拍甚麼節目，初步推測是這樣。<br><br>「那麼恕我失禮，請問你們的節目怎麼了？設備看起來不是很樂觀。」帶著白手套的手指了指報廢的筆記型電腦。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'他拿著手機螢幕對著維塔斯，指了指螢幕。「因為我不叫VV啊。」這才回神注意到本子，他剛搜資訊太認真了。起身去碰碰卡謬的肩膀。<br><br>「嘿，你剛剛那本子寫了什麼。」'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆看了看，在紙上寫上了「哦，我們可憐的筆記本電腦報廢了耶TT……」的文字，遞給了諾倫看。<br><br>被碰了碰肩膀的卡繆扭頭，張開口剛發出了一點扭曲沙啞、不成字的短音節又乖乖閉上了嘴巴，有些不太高興的翻回了寫著名字的那頁給德里安看。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'他們好像是認識的？<br><br>奧托左右看了幾眼綁著馬尾的人和最一開始發問的人。<br><br>但這個認識的氛圍感覺應該跟自己沒關係。<br>奧托按開手機想看看時間，另一隻手嘗試能不能拉開車門。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'奧托看了看手機，發現今天是 9 月 17 號，現在也已經是晚上的 8 點 24 分了。<br><br>你試圖拉開車門，車門可以很好的被拉開，看來車輛本身的損傷並不大。就在你拉開車門的時候，有什麼東西從你忘記拉上拉鏈的斜挎包裡掉了出來。<br><br>你撿起地上的東西，似乎是一把鑰匙。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'鑰匙上吊著一個藍色的菱形塑膠牌，上面寫著「遠途燈塔汽車旅館 12705 W, Vienna St, Clio, MI」，另一面寫著數字，應該是房間號。每個人的房間號都不同，從 #3 一直排到 #9。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, image:'https://images.plurk.com/zMPMvvnshGuFgQSK3slNx.png'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'「那看來我們以前認識。」維塔斯了然地點了點頭，然後在寫著『劇組』的文件夾裡找到了車上幾乎所有人的照片。看來他之前拍了不少。<br><br>「說起來，攝影機沒了。」聽見諾倫的問題，維塔斯拿起自己的包朝他晃了晃。「雖然沒有證據，但我確信那玩意之前裝在我包裡。」'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'「啊，抱歉剛剛沒看見。」似是感覺出人不太高興的樣子，拍了拍他的背。「你說什麼沒了？」他看看地面有沒有東西，剛顧著找手機了。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'奧托看著手上的汽車旅館鑰匙，自己似乎對這個東西沒什麼印象，對著正在聊天的各位<br><br>「你們……有這個嗎？」<br>奧托舉高手上的鑰匙。'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'「那是什麼……鑰匙？」<br><br>維塔斯也翻了翻自己的包和身上，然後在外套的內袋裡找到了同樣的鑰匙。於是他也學著奧托的動作將鑰匙舉了起來。「……有誒。」'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'「對於製作一檔節目來說，少了這些東西真是個壞消息。」對於破破爛爛的筆電與消失的攝影機感到可惜。<br><br>「啊、我也有，該不會是我們今天原本住的地方？」從自己的包中摸索出一模一樣，但編號明顯不同的鑰匙，看了一眼手機上的時間，提出了疑問與自己的推測。<br><br>「或許我們是在前往旅館的路上出了點麻煩。」'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆聽見了奧托的話，翻了翻自己的東西。真的翻到了一把汽車旅館的鑰匙——我也有欸！<br><br>於是他興奮的舉起拿著鑰匙的手，想表達自己也有鑰匙，然後打到了車子天花板，痛得卡繆無聲呲牙咧嘴。'},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'塞勒同樣從自己的口袋裡翻出了鑰匙，和自己的耳機纏在了一起，居然是一間汽車旅館，真是艱苦的劇組，但他甚至想不起來自己為什麼會參與這個節目。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'奧托聽見了卡繆撞擊的聲音，像是共情到了痛一樣嘶了一聲，關心了一下對方，「你還好吧？」<br><br>看大家手上都有鑰匙，奧托拿出手機想點開地圖尋找汽車旅館地址。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆揉了揉自己撞到車子天花板的手，在聽見詢問後指了指自己、再比了個OK的手勢。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'奧托拿出手機，發現這個地方的信號其實還是挺強的，不像其他恐怖電影一樣，一到了偏僻的地方就完全無法聯絡外界。<br><br>點開地圖確認汽車旅館的地址，你發現車頭的方向與旅館背道而馳。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'奧托又順道確認了一下你們目前所處的位置，你們現在似乎在密歇根州，西臨薩吉諾，東邊則是一個叫弗林特的大城市。你們就在這兩個大城市之間的小城市裡——克里歐，不過以位置來看，你們好像已經駛離克里歐小城市有一段距離了。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, image:'https://images.plurk.com/dHYGkC6JJvE2xTf14gkZ.png'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'「說起來，有人需要治療嗎？」<br><br>維塔斯這次從包裡摸到了小醫療包，他看了看身邊那幾個身上還帶著明顯血跡的傢伙們，友善發問。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'奧托將手機反轉，將螢幕的方向對準車內的其他人，展示自己查到的資料，「我查了一下旅館位置，發現跟我們車頭的方向是相反的，有可能是我們正在駛離旅館，但不排除反轉導致車頭位置偏移。」<br><br>「好消息是這裡有信號。」'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'「噢，幫大忙了……接下來該確認這輛車還能不能用。」<br><br>維塔斯舉著醫療包，探頭看了眼奧托的手機熒幕。看來這裡離汽車旅館不太近。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆捏了捏帽子的兔耳朵，手指指了指外面的天色，接著手指做了一個走路的姿勢從手機畫面地圖上旁邊的路用手指走到旅館。<br><br>——回頭去旅館嗎？<br><br>我們的車看起來是要逃離旅館耶。'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'「我個人的傷勢無大礙，可以其他人優先。」隔空點自己額頭上的傷口，接著加入關於目的地與汽車相關的話題。<br><br>「不知道是什麼讓我們來到這，總之先過去旅館吧，我猜旅館的工作人員會有點記憶，有鑰匙意味著我們辦理入住過了，或許出來只是為了取材之類的。」'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'點點頭，比了個OK的手勢，表示了自己沒有意見。<br><br>卡繆收回了手，順便又捏了捏帽子上的兔耳朵。'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'「一個個來吧，繃帶多得是。」隨手將醫療包拋向接話的諾倫，維塔斯艱難地帶著自己的大包往駕駛座爬去。<br><br>「讓我看看這輛車還能不能啟動……大雨天的徒步那麼遠可不是鬧著玩的。」'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'「謝謝。」看著醫療包在空氣中畫出一個完美的圓弧，自己則在落點伸手完美接住，身為一個成年人或許還是大概知道怎麼處理傷口的。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'諾倫給自己的傷口做了簡單的處理，畢竟本來傷得也不重，處理起來並不難。'},
+	  {type:'roll', text:'【諾倫 · 斯圖爾特】HP 11 → 12', success:true},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'看諾倫簡單處理好傷口，奧托也從諾倫那接過醫療箱替自己的傷口簡單處理了一下。'},
+	  {type:'roll', text:'【奧托 · 席爾維斯特】HP 14 → 15', success:true},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'眼珠子跟著轉來轉去，是說他們怎麼這麼多人掛彩來著。伸手去撈那個醫療箱要給自己處理。'},
+	  {type:'roll', text:'【德里安 · 溫斯頓】HP 10 → 11', success:true},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'塞勒伸手攏了攏外套，把手從口袋裡伸了出來，他並沒有大礙，只是想去前排看看這台破車還能不能動，畢竟他完全不想在這個天氣裡走出去。<br><br>他湊到了維塔斯的身後，「進展如何？」'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'維塔斯試圖啟動這輛廂式貨車。儘管車輛本身的損傷不大，引擎仍然能發動，但從擋風玻璃看出去，可以看見車目前側倒在一條溝渠裡，輪胎無法著地，無論怎麼開都只能聽到引擎發怒的聲響，車卻未動分毫。<br><br>恐怕只能叫拖車了。'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'……啊喔，這輛車能直接用人力搬出來嗎？<br><br>維塔斯撓了撓腦袋，放開了踩著油門的右腳，轉頭去看後頭的其他人，「一個好消息和一個壞消息，想先聽哪個？」'},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'塞勒見證了希望破滅的那一刻，又很快接受了現實，拍了拍維塔斯的肩膀，「收拾收拾下車吧。」'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'化妝包呢，鏡子.......沒破相吧。多少也想看看還有沒有傷口，小擦傷萬一漏了就完了。他撈了下包。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'德里安想起自己應該是有帶化妝包的，不過在摸過包後，你發現你找不到化妝包。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'TT 化妝包......不見了。不會留在旅館吧，急促到化妝包都忘記帶這可不是他的個性。'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'「你不覺得我們還能再努力一下嗎？只要把車從溝裡拉起來。」<br><br>看起來很抗拒雨天徒步的維塔斯抱著包看向站在身邊的塞勒，試圖再做一些垂死掙扎。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'奧托聽到前座的交談聲從車座後探出頭，「壞了嗎，我的天。」<br><br>轉頭看著車窗外，執行著自己工作的雨水勤奮異常，看起來目前沒有要辭職的樣子。'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'「沒壞——」維塔斯往後靠了靠，越過塞勒往奧托的方向比了個讚。<br><br>「但車子翻到溝裡了，得把它推上來才能走。」'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'「還好沒壞，那……那我們下車試試？」'},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'誰不討厭雨天徒步？塞勒更不想雨天推車。<br><br>他有些無語的嘆了口氣，像是沒輒了，如果喊拖車可能也得等上兩輩子，塞勒伸手把外套帽子戴上了，「都下車吧，試試看能不能把這台車推出來。」'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'下車的話沒有雨衣欸……卡繆摸摸自己的帽子，好像會濕掉。'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'「既然如此，我也來幫忙吧。」找出自己的雨傘，準備下車。'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'「就等這句話了！還有人有多餘的雨具能分一下嗎？」'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'「我也有帶傘」，從斜挎包裡摸出折疊傘拿在手中。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'上帝啊......這車推得出來嗎，他撈出摺疊傘塞去維塔斯手裡。滿腦袋問號為什麼車會這樣。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆難過的又摸摸自己的帽子，正準備乖乖下車推車。看到其他人有傘的卡繆眼睛一亮，將帽子脫下來放進諾倫手裡。<br><br>天啊，兄弟，幫我保管一下我的帽子！'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'手裏就這樣多了一個兔耳帽，想著如果自己撐傘的話，應該怎麼保管比較安全呢？<br><br>把帽子戴自己頭上。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'真是個好人！<br><br>卡繆為諾倫的決定鼓勵似的拍拍手。'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'「謝了哥們，你自己也有吧？」從德里安手上接過折疊傘的維塔斯快樂的道了聲謝，然後眼尖地瞄到了明明要下車卻不知道為什麼把帽子脫了的卡繆。<br><br>他看了看手上的傘和窗外的大雨，又看了看卡繆，發出了誠摯的疑惑，「……兄弟，你不戴帽子嗎？」<br><br>……外面下大雨喔？'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆搖搖頭，堅定的認為頭髮可以濕帽子不能濕。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'「我可以蹭別人的，大家擠擠嘛。」聽著好理所當然。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'「那我給你一起出去幫你撐？如果你要推車應該沒手推。」奧托對著卡繆說。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆對著奧托比了一個讚。 '},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'維塔斯想了想，又把傘塞回了德里安的手上，「你和那個哥們一起撐吧？我的外套應該防水。」<br><br>摸了摸身上的衝鋒衣，良好的手感讓他確信這件看起來不便宜的玩意應該是防水的。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'「行。」他接過來，目光打量過人的外套。「連帽的就帽子戴上。」'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'朝德里安豎起了一根大拇指，隨手就把外套帽子戴上了。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'在確認了各種各樣的東西後，你們終於決定下車看看。'},
+    ]
+  },
+  {
+    id:'road', tag:'下車', title:'翻倒的運氣', location:'未知馬路旁',
+    music:{ wave:'sine', freq:48, detune:3, filterFreq:450, noise:false, lfoRate:0.05, lfoDepth:40, extraHarmonic:true, label:'第二章 · 密室共鳴' },
+    entries:[
+      {type:'dialogue', speaker:'KP', isKP:true, text:'……'},
+      {type:'dialogue', speaker:'KP', isKP:true, text:'打開車門，踏上土地。'},
+      {type:'dialogue', speaker:'KP', isKP:true, text:'映入眼簾的是樹林和玉米田，天色已經暗下，而且下著綿綿細雨。雷聲在幾公尺外悶悶地發嚮，你們順著雷聲的方向看去，發現在你們車頭反方向的不遠處，有一家還亮著燈的農舍。走過去大概需要半小時左右。'},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'塞勒跳下了車，環顧一圈四週，似乎不管什麼選擇都令人頭痛，細細的雨落在了自己的外套上，他看著其他人陸續從車上下來，瞇了瞇眼問道，「你們真的相信我們六個人能把這台車推上來？」'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆盯著他那片玉米田，突然覺得想吃玉米。烤玉米……再塗上一層烤肉醬，真好吃。<br><br>聽見塞勒問話的卡繆比了一個展示肌肉的常用動作，然後比了一個讚——相信大家！'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'「或許能做到？」奧托關上車門，將折疊傘打開撐在頭頂上阻擋自由落體的雨。<br><br>「我覺得福克斯先生的體格挺讓人安心的。」'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'確實壯碩的福克斯先生笑著眯起了他的紫色眼睛。雙手在臉頰旁邊比了耶。'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'維塔斯跟在幾人的身後也跳下了車，雨水打在身上的感覺讓他忍不住皺了皺眉。他圍著陷進溝裡的車子繞了半圈，試圖找出一個能更輕鬆地把車弄回路上的角度。<br><br>「我覺得我應該也挺有力氣的？」'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'持傘，觀察汽車，食指輕推眼鏡後緩緩開口。<br><br>「世界上可沒有完全不可能的事情，而且不可能本身也是一種事件。」思考哪裡比較好施力。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'馬路的左側是一片玉米田，右側則是你們的車子落下的地方，雖然車掉的地方離馬路不遠，但斜坡相當陡峭，在上面站穩必須將兩隻腳穩在高低差不同的草地上才行，尤其現在正下著雨，這些沒人打理的草地更加濕滑。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'雨聲和傘接觸的聲響在外頭更明顯了，他瞧了眼車的樣子。'},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'塞勒迫切地想知道自己到底為什麼會和這些性格迥異的人待在一起。不知道該不該評價其為過分樂觀。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'儘管塞勒似乎不太樂意，但你們還是擼起袖子，準備推車。<br><br>大家都走到車頭前，在不知誰的喊聲後，齊心把車往馬路的方向推——'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'——'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'草地濕滑，難以站穩，更何況是在試圖推動這輛車的情況下，你們鞋底的花紋更是沒有多少作用。車輛稍微動了一下，但興許是每個人力氣不同，車子在推動到一半的時候向旁邊傾斜，最後完全脫離了某一側人的掌心——<br><br>車往更深處翻了過去，又翻了一面，車底朝上，靠在一棵樹再次靜靜地躺下了。雖然不能說是萬丈深淵，但至少以人力來說，這輛車已經很難再被救回馬路上了。'},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'塞勒對於這個結果沒有太意外，很快接受了現實，他拍了拍掌心，便準備走回馬路上，一邊從口袋裡掏出手帕，擦了擦自己的手，低頭看了眼自己沾滿草和土的鞋，又暗嘆了口氣。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'難過的看著那輛車。'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'預料之內的結果，所以面部表情毫無變化，看來他所期待的並沒有發生，思考著是哪裡出了差錯。<br><br>「至少我們試過了。」'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'「原來還能比原來的更糟啊。」奧托抓了抓頭髮，一手撐著傘看著底盤朝上的車輛，妥協的準備走回到馬路上。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'啊......救不回來了。現在是要走路了嗎。<br><br>他順著看了看玉米田那邊有沒有小徑，這個季節還在種玉米嗎。'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'「………………哇喔，完美的仰躺。」維塔斯愣愣地看著那輛呲溜一下從手裡滑出去的車子，又看了看身邊的幾個人。最後只好認命地抹了把臉上的雨水。<br><br>「接下來該怎麼辦？」'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'德里安望向玉米田，但並沒有看到小徑，只看到高高的玉米叢們。<br><br>要說唯一的生機，可能就是剛剛下車張望的時候看到的那棟農舍了。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'即使有傘還是淋到了一些雨，卡繆偏頭看看戴在諾倫的帽子有沒有事情，順手將過長的瀏海用手梳了上去，幾撮不聽話的頭髮掉了下來。<br><br>他指了指自己的腳，現在似乎只剩下走路了。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'「應該是只能走回去了，不過......」<br>視線轉向車頭的反方向，指向那方，「這個地方原來還有農舍，這片玉米田應該就是這戶種的 ? 」'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'農舍？他略微瞇起眼，又看了看那輛回不來的車。只能靠雙腿了。「......走路吧。」<br><br>但來得及嗎，他瞥眼天空的顏色。萬一走著走著時間拉長越晚也不大安全。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'奧托收回視線...跟手指。<br><br>「那我們就往汽車旅館走 ? 」'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'維塔斯邊朝卡繆比了個讚，邊順著奧托指的方向看了過去——噢，亮光。<br><br>「……去那個農舍吧，」奧托的話讓他撓了撓頭，「這麼晚了我們走不回旅館的，哥們。」'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'「現在時間也有點晚了，不如問看看農舍方不方便借宿一晚吧。」'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆爭大眼睛對著奧托瘋狂搖頭，指了指還在發亮的農舍。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'「？老兄十一號公車都要變斷車了，你是想走出什麼樣的人生。」'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆發出了有點沙啞難聽的笑聲。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'「也是。」奧托不好意思地用指尖掃了掃鼻子，「那我們就走吧，再晚可能雨就大了。」<br><br>如此生硬的轉移話題。'},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'塞勒冷靜的表情出現了一絲笑意。'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'維塔斯也忍不住地笑出了聲，伸出手拍了拍奧托的肩膀。「既然決定好了目的地……那就拿好隨身物品，出發吧？」<br><br>「大家都注意點腳下，別摔倒了。」'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'摸了摸頭頂確認帽子還在，想著等等再把帽子還給對方。<br><br>「好。」'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆點點頭，快樂的比了一個OK的手勢。順便確認了自己的東西有沒有落下。'},
+    ]
+  },
+];
+
+const MAX_SAN = 65;
+
+const railList = document.getElementById('railList');
+const scenesRoot = document.getElementById('scenesRoot');
+const body = document.body;
+
+/* 建立時間軸 + 場景區塊 */
+SCENES.forEach((scene, i) => {
+  const li = document.createElement('li');
+  li.className = 'rail-item';
+  li.dataset.scene = scene.id;
+  li.innerHTML = `
+    <span class="rail-dot"></span>
+    <button class="rail-btn" data-target="${scene.id}">
+      <span class="tag">${scene.tag}</span>${scene.title}
+    </button>`;
+  railList.appendChild(li);
+
+  const section = document.createElement('section');
+  section.className = 'scene-section';
+  section.id = scene.id;
+  section.dataset.scene = scene.id;
+
+  const entriesHTML = scene.entries.map(e => {
+    if (e.type === 'narration') {
+      return `<div class="entry-narration">${e.text}</div>`;
+    }
+    if (e.type === 'dialogue') {
+	  const style = e.isKP ? '' : `style="color:${e.color}"`;
+	  const avatarSrc = e.avatar || CHARACTER_AVATARS[e.speaker];
+	  const avatarHTML = avatarSrc ? `<img class="entry-avatar" src="${avatarSrc}" alt="${e.speaker}">` : '';
+	  const contentHTML = e.image
+    ? `<img class="dialogue-image" src="${e.image}" alt="${e.speaker}">`
+    : `<div class="dialogue-text">${e.text}</div>`;
+  return `
+    <div class="dialogue-row ${e.isKP ? 'is-kp' : ''}">
+      ${avatarHTML}
+      <div class="entry-dialogue ${e.isKP ? 'is-kp' : ''}">
+        <div class="speaker" ${e.isKP ? '' : style}>${e.speaker}</div>
+        ${contentHTML}
+      </div>
+    </div>`;
+	}
+    if (e.type === 'roll') {
+  const sanHTML = (e.sanDelta !== undefined) ? `<span class="san-delta">SAN ${e.sanDelta}</span>` : '';
+
+  // 優先用手動指定的 target / roll，沒有的話從 text 裡自動解析「CC ≤ 數字」與「擲出 數字」
+  let target = e.target;
+  let roll = e.roll;
+  if (target === undefined || roll === undefined) {
+    const targetMatch = e.text.match(/CC\s*≤\s*(\d+)/);
+    const rollMatch = e.text.match(/擲出\s*(\d+)/);
+    if (targetMatch) target = parseInt(targetMatch[1], 10);
+    if (rollMatch) roll = parseInt(rollMatch[1], 10);
+  }
+
+  let isCrit = false;
+  if (target !== undefined && roll !== undefined) {
+    isCrit = target >= 50 ? roll <= 5 : roll === 1;
+  }
+
+  const critHTML = isCrit ? `<span class="crit-badge">大成功</span>` : '';
+  return `<div class="entry-roll ${e.success ? '' : 'fail'} ${isCrit ? 'crit' : ''}">${e.text}${sanHTML}${critHTML}</div>`;
+}
+  }).join('');
+
+  section.innerHTML = `
+    <div class="divider">${scene.tag}</div>
+    <div class="scene-header">
+      <div class="scene-tag">${scene.tag}</div>
+      <h2 class="scene-title">${scene.title}</h2>
+      <div class="scene-loc">${scene.location}</div>
+    </div>
+    <div class="entries">${entriesHTML}</div>`;
+
+  scenesRoot.appendChild(section);
+});
+
+/* =========================================================
+   音訊引擎：純 Web Audio 合成的環境音，不需外部音檔即可自動播放。
+   每個場景的 music 參數決定音色；music 為 null/省略時不切換，
+   沿用目前正在播放的音樂（用於「換場景但不換音樂」的情況）。
+   若想改播真實 mp3，把場景的 music 換成 {type:'file', url:'...', label:'...'}，
+   goToSceneMusic() 下方已預留 file 分支。
+   ========================================================= */
+const SCENES_BY_ID = Object.fromEntries(SCENES.map(s => [s.id, s]));
+
+SCENES_BY_ID.cover = {
+  id:'cover',
+  title:'封面',
+  music:{ type:'file', url:'Laufey.mp3', label:'Laufey - Forget-me-not' }
+};
+SCENES_BY_ID.characters = {
+  id:'characters',
+  title:'角色介紹',
+  music:null   // null＝沿用封面的音樂繼續播放，不切換；想換成別的就填 music 物件
+};
+
+let audioCtx = null;
+let masterGain = null;
+let currentAmbience = null;
+let volume = 0.4;
+let muted = false;
+
+function buildSynthAmbience(params){
+  const output = audioCtx.createGain();
+  output.gain.value = 0;
+  output.connect(masterGain);
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = params.filterFreq || 800;
+  filter.Q.value = 0.7;
+  filter.connect(output);
+
+  const nodes = [];
+  const detunes = params.detune ? [0, params.detune, -params.detune] : [0];
+  detunes.forEach((det, i) => {
+    const osc = audioCtx.createOscillator();
+    osc.type = params.wave || 'sine';
+    osc.frequency.value = params.freq || 55;
+    osc.detune.value = det;
+    const oGain = audioCtx.createGain();
+    oGain.gain.value = i === 0 ? 0.5 : 0.22;
+    osc.connect(oGain); oGain.connect(filter); osc.start();
+    nodes.push(osc);
+  });
+
+  if (params.extraHarmonic) {
+    const osc2 = audioCtx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.value = (params.freq || 55) * 1.5;
+    const g2 = audioCtx.createGain(); g2.gain.value = 0.15;
+    osc2.connect(g2); g2.connect(filter); osc2.start();
+    nodes.push(osc2);
+  }
+
+  const lfo = audioCtx.createOscillator();
+  lfo.frequency.value = params.lfoRate || 0.1;
+  const lfoGain = audioCtx.createGain();
+  lfoGain.gain.value = params.lfoDepth || 50;
+  lfo.connect(lfoGain); lfoGain.connect(filter.frequency); lfo.start();
+  nodes.push(lfo);
+
+  if (params.noise) {
+    const bufferSize = audioCtx.sampleRate * 2;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noiseSrc = audioCtx.createBufferSource();
+    noiseSrc.buffer = buffer; noiseSrc.loop = true;
+    const noiseFilter = audioCtx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = params.noiseFilter || 1000;
+    noiseFilter.Q.value = 0.8;
+    const noiseGain = audioCtx.createGain(); noiseGain.gain.value = 0.12;
+    noiseSrc.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(filter);
+    noiseSrc.start();
+    nodes.push(noiseSrc);
+  }
+
+  return {
+    output,
+    stop(){ nodes.forEach(n => { try { n.stop(); } catch (e) {} }); }
+  };
+}
+
+function buildFileAmbience(url){
+  const audioEl = new Audio(url);
+  audioEl.loop = true;
+  const src = audioCtx.createMediaElementSource(audioEl);
+  const output = audioCtx.createGain();
+  output.gain.value = 0;
+  src.connect(output); output.connect(masterGain);
+  audioEl.play().catch(e => console.error('音樂播放失敗：', e));
+  return { output, stop(){ audioEl.pause(); audioEl.src = ''; } };
+}
+
+function goToSceneMusic(scene){
+  if (!audioCtx || !scene || scene.music === null || scene.music === undefined) return; // 不切換，沿用目前音樂
+  const m = scene.music;
+  const newAmb = m.type === 'file' ? buildFileAmbience(m.url) : buildSynthAmbience(m);
+  const now = audioCtx.currentTime;
+  newAmb.output.gain.cancelScheduledValues(now);
+  newAmb.output.gain.setValueAtTime(0, now);
+  newAmb.output.gain.linearRampToValueAtTime(muted ? 0 : volume, now + 2.2);
+
+  if (currentAmbience) {
+    const old = currentAmbience;
+    old.output.gain.cancelScheduledValues(now);
+    old.output.gain.setValueAtTime(old.output.gain.value, now);
+    old.output.gain.linearRampToValueAtTime(0, now + 2.2);
+    setTimeout(() => old.stop(), 2400);
+  }
+  currentAmbience = newAmb;
+  document.getElementById('musicTrack').textContent = m.label || scene.title;
+}
+
+/* 開場遮罩：瀏覽器要求先有一次使用者操作才能出聲 */
+document.getElementById('gateBtn').addEventListener('click', () => {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = volume;
+    masterGain.connect(audioCtx.destination);
+  }
+  audioCtx.resume();
+  goToSceneMusic(SCENES_BY_ID[body.dataset.scene] || SCENES[0]);
+  const gate = document.getElementById('gate');
+  gate.classList.add('gate-hidden');
+  setTimeout(() => gate.remove(), 1000);
+});
+
+/* 播放器控制：靜音切換 + 音量 */
+const muteBtn = document.getElementById('muteBtn');
+muteBtn.addEventListener('click', () => {
+  muted = !muted;
+  muteBtn.textContent = muted ? '✕' : '♪';
+  if (masterGain) {
+    const now = audioCtx.currentTime;
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.linearRampToValueAtTime(muted ? 0 : volume, now + 0.4);
+  }
+});
+document.getElementById('volumeSlider').addEventListener('input', (e) => {
+  volume = e.target.value / 100;
+  if (masterGain && !muted) masterGain.gain.value = volume;
+});
+
+/* 場景切換：進入視窗時換背景、高亮時間軸、並嘗試切換音樂 */
+const sceneSections = document.querySelectorAll('.scene-section, .cover, .characters');
+const railItems = document.querySelectorAll('.rail-item');
+
+const sceneObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.dataset.scene;
+      body.dataset.scene = id;
+      railItems.forEach(li => li.classList.toggle('active', li.dataset.scene === id));
+      goToSceneMusic(SCENES_BY_ID[id]);
+    }
+  });
+}, { threshold: 0, rootMargin: '-40% 0px -55% 0px' });
+
+sceneSections.forEach(s => sceneObserver.observe(s));
+
+document.querySelectorAll('.rail-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById(btn.dataset.target).scrollIntoView({ behavior:'smooth' });
+  });
+});
+
+const scrollTopBtn = document.getElementById('scrollTopBtn');
+const scrollBottomBtn = document.getElementById('scrollBottomBtn');
+
+function updateScrollButtons(){
+  const scrolled = window.scrollY > 300;
+  scrollTopBtn.classList.toggle('visible', scrolled);
+
+  const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 300;
+  scrollBottomBtn.classList.toggle('visible', !nearBottom);
+}
+window.addEventListener('scroll', updateScrollButtons, { passive:true });
+updateScrollButtons();
+
+scrollTopBtn.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+scrollBottomBtn.addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' }));
+</script>
+</body>
+</html>

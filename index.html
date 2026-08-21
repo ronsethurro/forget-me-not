@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>勿忘我 · 團錄總覽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Serif+TC:wght@400;500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2a2118;
+    --parchment:#ece0c4;
+    --gold:#ad8a3f;
+    --gold-bright:#d4af5f;
+    --scene-a:#0d0b10;
+    --scene-b:#1a1520;
+    --scene-accent:#3a2d40;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; min-height:100vh;
+    font-family:'Noto Serif TC', serif;
+    color:var(--parchment);
+    overflow-x:hidden;
+  }
+
+  .bg-layer{
+    position:fixed; inset:0; z-index:-2;
+    background:
+      radial-gradient(ellipse at 30% 20%, color-mix(in srgb, var(--scene-accent) 35%, transparent), transparent 60%),
+      linear-gradient(160deg, var(--scene-a), var(--scene-b) 70%);
+  }
+  .bg-grain{
+    position:fixed; inset:0; z-index:-1;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, transparent 1px, transparent 3px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.08) 0px, transparent 1px, transparent 4px);
+    mix-blend-mode:overlay; opacity:0.35; pointer-events:none;
+  }
+  .bg-vignette{
+    position:fixed; inset:0; z-index:-1; pointer-events:none;
+    box-shadow: inset 0 0 18vw 4vw rgba(0,0,0,0.5);
+  }
+
+  .index-main{
+    max-width:820px; margin:0 auto;
+    padding:5.5rem 1.5rem 6rem;
+  }
+
+  .index-hero{ text-align:center; margin-bottom:4rem; }
+  .index-seal{ width:56px; height:56px; margin:0 auto 1.4rem; opacity:0.85; }
+  .index-eyebrow{
+    font-family:'Cinzel', serif; font-size:0.72rem; letter-spacing:0.4em;
+    color:var(--gold-bright); margin-bottom:0.9rem;
+  }
+  .index-title{
+    font-weight:700; font-size:clamp(2rem, 5.5vw, 3rem);
+    line-height:1.3; margin:0 0 1rem;
+    text-shadow:0 2px 24px rgba(0,0,0,0.5);
+  }
+  .index-desc{
+    max-width:34em; margin:0 auto; color:rgba(236,224,196,0.68);
+    line-height:1.9; font-size:0.95rem;
+  }
+
+  .session-list{ display:flex; flex-direction:column; gap:1.1rem; }
+
+  .session-card{
+    display:flex; align-items:center; gap:1.4rem;
+    text-decoration:none; color:inherit;
+    background:linear-gradient(160deg, rgba(236,224,196,0.06), rgba(236,224,196,0.02));
+    border:1px solid rgba(212,175,95,0.16);
+    border-radius:4px;
+    padding:1.3rem 1.5rem;
+    transition:border-color 0.35s ease, background 0.35s ease, transform 0.35s ease;
+  }
+  .session-card:hover{
+    border-color:var(--gold-bright);
+    background:linear-gradient(160deg, rgba(212,175,95,0.1), rgba(212,175,95,0.02));
+    transform:translateX(4px);
+  }
+  .session-card.is-locked{
+    opacity:0.45; pointer-events:none;
+  }
+
+  .session-num{
+    font-family:'Cinzel', serif; font-weight:700; font-size:1.6rem;
+    color:var(--gold-bright); opacity:0.7; flex:none; width:2.4rem;
+  }
+  .session-info{ flex:1; min-width:0; }
+  .session-title{ font-size:1.05rem; font-weight:600; margin-bottom:0.3rem; }
+  .session-date{
+    font-family:'Special Elite', monospace; font-size:0.7rem;
+    color:rgba(236,224,196,0.45); letter-spacing:0.06em; margin-bottom:0.5rem;
+  }
+  .session-desc{ font-size:0.85rem; line-height:1.7; color:rgba(236,224,196,0.72); margin:0; }
+  .session-arrow{
+    flex:none; font-family:'Cinzel', serif; font-size:1.1rem;
+    color:rgba(212,175,95,0.4); transition:color 0.3s ease, transform 0.3s ease;
+  }
+  .session-card:hover .session-arrow{ color:var(--gold-bright); transform:translateX(3px); }
+
+  footer{
+    text-align:center; margin-top:4rem;
+    font-family:'Special Elite', monospace; font-size:0.72rem;
+    color:rgba(236,224,196,0.35);
+  }
+
+  @media (max-width:560px){
+    .session-card{ padding:1.1rem; gap:1rem; }
+    .session-num{ font-size:1.3rem; width:1.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="bg-grain"></div>
+<div class="bg-vignette"></div>
+
+<main class="index-main">
+  <section class="index-hero">
+    <svg class="index-seal" viewBox="0 0 100 100" fill="none">
+      <circle cx="50" cy="50" r="46" stroke="#d4af5f" stroke-width="1"/>
+      <path d="M50 12 L83 68 L17 68 Z" stroke="#d4af5f" stroke-width="1" fill="none"/>
+      <circle cx="50" cy="55" r="12" stroke="#d4af5f" stroke-width="1" fill="none"/>
+      <circle cx="50" cy="55" r="3" fill="#d4af5f"/>
+    </svg>
+    <div class="index-eyebrow">CALL OF CTHULHU · CASE ARCHIVE</div>
+    <h1 class="index-title">勿忘我</h1>
+    <p class="index-desc">
+      那些你已忘卻的過去。
+    </p>
+  </section>
+
+  <!-- =========================================================
+       每一場團錄一張卡片，改路徑、標題、日期、簡介即可新增/調整。
+       想先佔位但還沒寫完的場次，把 class 加上 is-locked，
+       並把 href 換成 "#"，卡片會變半透明且無法點擊。
+       ========================================================= -->
+  <section class="session-list">
+    <a class="session-card" href="forgetmenot1.html">
+      <div class="session-num">01</div>
+      <div class="session-info">
+        <div class="session-title">不熟悉的夜晚</div>
+        <div class="session-date">2026 / 08 / 13</div>
+        <p class="session-desc">你在不熟悉的人們身邊醒來，卻不記得自己為何落入如此境地。</p>
+      </div>
+      <div class="session-arrow">→</div>
+    </a>
+
+    <a class="session-card" href="forgetmenot2.html">
+      <div class="session-num">02</div>
+      <div class="session-info">
+        <div class="session-title">落腳處</div>
+        <div class="session-date">2026 / 08 / 19</div>
+        <p class="session-desc">你到底想走出什麼樣的人生？</p>
+      </div>
+      <div class="session-arrow">→</div>
+    </a>
+
+    <a class="session-card is-locked" href="#">
+      <div class="session-num">03</div>
+      <div class="session-info">
+        <div class="session-title">尚未記錄</div>
+        <div class="session-date">待場次結束後更新</div>
+        <p class="session-desc">此案卷尚未解封。</p>
+      </div>
+      <div class="session-arrow">→</div>
+    </a>
+  </section>
+
+  <footer>— 案卷持續更新中 —</footer>
+</main>
+
+</body>
+</html>

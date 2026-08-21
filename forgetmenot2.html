@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>勿忘我 · 團錄</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Serif+TC:wght@400;500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2a2118;
+    --ink-soft:#4a3f30;
+    --parchment:#ece0c4;
+    --parchment-edge:#d9c7a2;
+    --blood:#7a2e2e;
+    --gold:#ad8a3f;
+    --gold-bright:#d4af5f;
+    --corruption:0;
+    --scene-a:#10151a;
+    --scene-b:#1c2530;
+    --scene-accent:#5a6b78;
+    --transition-speed:1.4s;
+  }
+  @media (prefers-reduced-motion:reduce){
+    :root{ --transition-speed:0.05s; }
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; }
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Noto Serif TC', serif;
+    color:var(--parchment);
+    overflow-x:hidden;
+  }
+
+  /* ---------- 背景層：依場景切換 ---------- */
+  .bg-layer{
+    position:fixed; inset:0; z-index:-2;
+    background:
+      radial-gradient(ellipse at 30% 20%, color-mix(in srgb, var(--scene-accent) 35%, transparent), transparent 60%),
+      linear-gradient(160deg, var(--scene-a), var(--scene-b) 70%);
+    transition: background var(--transition-speed) ease;
+  }
+  .bg-grain{
+    position:fixed; inset:0; z-index:-1;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, transparent 1px, transparent 3px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.08) 0px, transparent 1px, transparent 4px);
+    mix-blend-mode:overlay;
+    opacity:0.35;
+    pointer-events:none;
+  }
+  .bg-vignette{
+    position:fixed; inset:0; z-index:-1;
+    pointer-events:none;
+    box-shadow: inset 0 0 18vw 4vw rgba(0,0,0, calc(0.45 + var(--corruption) * 0.35));
+    background: radial-gradient(ellipse at center,
+      transparent 40%,
+      color-mix(in srgb, var(--blood) calc(var(--corruption) * 55%), transparent) 100%);
+    transition: box-shadow 0.8s ease, background 0.8s ease;
+  }
+
+  /* 各場景色調 */
+  body[data-scene="cover"] .bg-layer{
+  background: #7a7462;
+	}
+  body[data-scene="house"] .bg-layer{
+  background-image: linear-gradient(rgba(10,8,5,0.55), rgba(10,8,5,0.75)), url('https://images.plurk.com/1bzwSFIjXcwHAqxDMqL3oI.jpg');
+  background-size: cover;
+  background-position: center;
+	}
+  
+   /* 角色卡 */
+  .characters{ padding-top:5.5rem; scroll-margin-top:2rem; min-height:92vh; }
+.character-grid{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:1.4rem; max-width:60em; margin-top:2rem;
+}
+.character-card{
+  background:linear-gradient(160deg, rgba(236,224,196,0.06), rgba(236,224,196,0.02));
+  border:1px solid rgba(212,175,95,0.14);
+  border-radius:4px; padding:1.4rem 1rem; text-align:center;
+}
+.character-portrait{
+  width:88px; height:88px; border-radius:50%; object-fit:cover;
+  border:2px solid var(--gold-bright); margin-bottom:0.8rem;
+}
+.character-name{ font-weight:600; font-size:1rem; margin-bottom:0.2rem; }
+.character-role{ font-family:'Special Elite', monospace; font-size:0.68rem; color:rgba(236,224,196,0.5); margin-bottom:0.7rem; }
+.character-bio{ font-size:0.85rem; line-height:1.75; color:rgba(236,224,196,0.8); }
+
+  /* ---------- 版面 ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:240px minmax(0,1fr);
+    max-width:1180px;
+    margin:0 auto;
+    min-height:100vh;
+  }
+  
+  .top-nav{
+  display:flex; justify-content:space-between; align-items:center;
+  max-width:1180px; margin:0 auto;
+  padding:1.4rem 1.5rem 0;
+}
+.top-nav-btn{
+  font-family:'Special Elite', monospace;
+  font-size:0.72rem; letter-spacing:0.08em;
+  color:rgba(236,224,196,0.65);
+  text-decoration:none;
+  border:1px solid rgba(212,175,95,0.35);
+  border-radius:2px;
+  padding:0.4rem 0.9rem;
+  background:rgba(10,9,7,0.35);
+  transition:color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+}
+.top-nav-btn:hover{ color:var(--gold-bright); border-color:var(--gold-bright); background:rgba(212,175,95,0.1); }
+.top-nav-index{ margin-left:auto; }
+
+  /* 左側場景時間軸 */
+  .rail{
+    position:sticky; top:0; align-self:start;
+    height:100vh;
+    padding:4.5rem 1.2rem 2rem;
+    display:flex; flex-direction:column; gap:1.6rem;
+    border-right:1px solid rgba(212,175,95,0.18);
+  }
+  .rail-title{
+    font-family:'Cinzel', 'Noto Serif TC', serif;
+    font-size:0.72rem; letter-spacing:0.28em;
+    color:var(--gold-bright); opacity:0.75;
+    margin-bottom:0.4rem;
+  }
+  .rail-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+  .rail-item{ position:relative; padding:0.65rem 0 0.65rem 1.4rem; }
+  .rail-item::before{
+    content:""; position:absolute; left:0.28rem; top:0; bottom:0;
+    width:1px; background:rgba(212,175,95,0.22);
+  }
+  .rail-item:first-child::before{ top:50%; }
+  .rail-item:last-child::before{ bottom:50%; }
+  .rail-dot{
+    position:absolute; left:0; top:1.05rem;
+    width:0.55rem; height:0.55rem; border-radius:50%;
+    background:var(--ink-soft); border:1px solid rgba(212,175,95,0.4);
+    transition:all 0.35s ease;
+  }
+  .rail-btn{
+    background:none; border:none; text-align:left; width:100%;
+    font-family:'Noto Serif TC', serif; font-size:0.86rem;
+    color:rgba(236,224,196,0.55); cursor:pointer; line-height:1.5;
+    transition:color 0.3s ease;
+  }
+  .rail-btn .tag{
+    display:block; font-size:0.66rem; letter-spacing:0.14em;
+    color:rgba(212,175,95,0.55); margin-bottom:0.15rem;
+  }
+  .rail-item.active .rail-btn{ color:var(--parchment); }
+  .rail-item.active .rail-dot{ background:var(--gold-bright); box-shadow:0 0 8px var(--gold-bright); }
+  .rail-item.active .rail-btn .tag{ color:var(--gold-bright); }
+
+  /* ---------- 主要內容 ---------- */
+  .main{ padding:0 1.5rem 8rem; }
+
+  .cover{
+    min-height:92vh; display:flex; flex-direction:column; justify-content:center;
+    padding:3rem 1rem; position:relative;
+  }
+  .cover-seal{ width:58px; height:58px; margin-bottom:1.6rem; opacity:0.85; }
+  .cover-eyebrow{ font-family:'Cinzel', serif; font-size:0.75rem; letter-spacing:0.4em; color:var(--gold-bright); margin-bottom:0.8rem; }
+  .cover-title{
+    font-family:'Noto Serif TC', serif; font-weight:700;
+    font-size:clamp(2.2rem, 6vw, 3.6rem); line-height:1.25; margin:0 0 1rem;
+    text-shadow:0 2px 24px rgba(0,0,0,0.5);
+  }
+  .cover-desc{ max-width:38em; color:rgba(236,224,196,0.72); line-height:1.9; font-size:0.98rem; }
+  .cover-meta{
+    display:flex; flex-wrap:wrap; gap:1.6rem; margin-top:2.2rem;
+    font-family:'Special Elite', monospace; font-size:0.78rem; color:rgba(236,224,196,0.55);
+  }
+  .cover-meta span b{ display:block; color:var(--gold-bright); font-weight:400; font-size:0.68rem; letter-spacing:0.12em; margin-bottom:0.2rem; }
+
+  .scene-section{ padding-top:5.5rem; scroll-margin-top:2rem; }
+  .scene-header{ margin-bottom:2.2rem; }
+  .scene-tag{ font-family:'Cinzel', serif; font-size:0.72rem; letter-spacing:0.3em; color:var(--gold-bright); }
+  .scene-title{ font-size:clamp(1.5rem, 3.4vw, 2.1rem); margin:0.3rem 0 0.4rem; font-weight:600; }
+  .scene-loc{ font-family:'Special Elite', monospace; font-size:0.78rem; color:rgba(236,224,196,0.5); }
+
+  .entries{ display:flex; flex-direction:column; gap:1.1rem; max-width:52em; }
+
+  .entry-narration{
+    font-style:italic; line-height:2; color:rgba(236,224,196,0.82);
+    padding-left:1.1rem; border-left:2px solid rgba(212,175,95,0.28);
+    font-size:0.97rem;
+  }
+
+  .dialogue-row{
+  display:flex; gap:0.8rem; align-items:flex-start;
+  max-width:85%;
+  }
+  .dialogue-row.is-kp{ margin-left:auto; }
+
+  .entry-dialogue{
+  flex:1; min-width:0;
+  background:linear-gradient(160deg, rgba(236,224,196,0.06), rgba(236,224,196,0.02));
+  border:1px solid rgba(212,175,95,0.14);
+  border-radius:4px;
+  padding:0.9rem 1.1rem;
+  }
+  .entry-dialogue.is-kp{ background:linear-gradient(160deg, rgba(173,138,63,0.14), rgba(173,138,63,0.03)); }
+
+  .entry-avatar{
+  width:44px; height:44px; flex:none;
+  margin-top:0.15rem;
+  border-radius:4px; object-fit:cover;
+  border:1px solid rgba(212,175,95,0.35);
+  }
+
+  .entry-dialogue.is-kp .speaker{ color:#007336; }
+  .speaker{ font-size:0.78rem; font-weight:600; letter-spacing:0.04em; margin-bottom:0.35rem; }
+  .dialogue-text{ line-height:1.85; font-size:0.98rem; color:rgba(236,224,196,0.92); }
+  .dialogue-image{
+  display:block;
+  max-width:100%;
+  border-radius:3px;
+  margin-top:0.2rem;
+  }
+
+  .entry-roll{
+    align-self:flex-start;
+    font-family:'Special Elite', monospace;
+    font-size:0.8rem;
+    color:var(--parchment);
+    background:rgba(0,0,0,0.22);
+    border:1px dashed rgba(212,175,95,0.4);
+    padding:0.55rem 0.9rem;
+    transform:rotate(-0.6deg);
+    letter-spacing:0.03em;
+  }
+  .entry-roll.fail{ border-color:rgba(122,46,46,0.7); color:#e8b3ab; }
+  .entry-roll .san-delta{ margin-left:0.6rem; color:var(--gold-bright); }
+  .entry-roll.crit{
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+  box-shadow: 0 0 10px rgba(212,175,95,0.45), inset 0 0 6px rgba(212,175,95,0.12);
+  animation: crit-pulse 1.6s ease-in-out infinite;
+}
+.crit-badge{
+  margin-left:0.6rem;
+  padding:0.05rem 0.45rem;
+  border:1px solid var(--gold-bright);
+  border-radius:2px;
+  font-size:0.7rem;
+  letter-spacing:0.12em;
+}
+@keyframes crit-pulse{
+  0%,100%{ box-shadow:0 0 6px rgba(212,175,95,0.3); }
+  50%{ box-shadow:0 0 16px rgba(212,175,95,0.75); }
+}
+
+  .divider{
+    display:flex; align-items:center; gap:0.8rem;
+    margin:3rem 0 1rem; color:rgba(212,175,95,0.4);
+    font-family:'Cinzel', serif; font-size:0.68rem; letter-spacing:0.3em;
+  }
+  .divider::before, .divider::after{ content:""; flex:1; height:1px; background:rgba(212,175,95,0.25); }
+
+  footer{ text-align:center; padding:4rem 1rem 2rem; font-size:0.75rem; color:rgba(236,224,196,0.35); font-family:'Special Elite', monospace; }
+
+  /* ---------- 開場遮罩（瀏覽器政策需要一次點擊才能出聲） ---------- */
+  .gate{
+    position:fixed; inset:0; z-index:50;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:1.1rem;
+    background:radial-gradient(ellipse at 50% 40%, rgba(20,16,10,0.88), rgba(6,5,4,0.97));
+    backdrop-filter:blur(2px);
+    transition:opacity 0.9s ease;
+    text-align:center; padding:2rem;
+  }
+  .gate.gate-hidden{ opacity:0; pointer-events:none; }
+  .gate-eyebrow{ font-family:'Cinzel', serif; font-size:0.7rem; letter-spacing:0.32em; color:rgba(212,175,95,0.7); }
+  .gate-btn{
+    font-family:'Noto Serif TC', serif; font-size:1rem; letter-spacing:0.06em;
+    color:var(--parchment); background:rgba(212,175,95,0.08);
+    border:1px solid rgba(212,175,95,0.5); border-radius:2px;
+    padding:0.8rem 2.2rem; cursor:pointer;
+    transition:background 0.3s ease, transform 0.3s ease;
+  }
+  .gate-btn:hover{ background:rgba(212,175,95,0.18); transform:translateY(-1px); }
+  .gate-note{ font-family:'Special Elite', monospace; font-size:0.72rem; color:rgba(236,224,196,0.4); max-width:24em; }
+
+  /* ---------- 音樂播放器 ---------- */
+  .scroll-nav{
+  position:fixed; left:1.1rem; bottom:1.1rem; z-index:20;
+  display:flex; flex-direction:column; gap:0.5rem;
+}
+.scroll-btn{
+  width:2.4rem; height:2.4rem; border-radius:50%;
+  border:1px solid rgba(212,175,95,0.4);
+  background:rgba(10,9,7,0.65);
+  color:var(--gold-bright);
+  font-size:1rem;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  backdrop-filter:blur(4px);
+  opacity:0; pointer-events:none;
+  transition:opacity 0.3s ease, background 0.3s ease, transform 0.3s ease;
+}
+.scroll-btn.visible{ opacity:1; pointer-events:auto; }
+.scroll-btn:hover{ background:rgba(212,175,95,0.18); transform:translateY(-2px); }
+
+@media (max-width:860px){
+  .scroll-nav{ left:0.6rem; bottom:0.6rem; }
+}
+  
+  .music-widget{
+    position:fixed; right:1.1rem; bottom:1.1rem; z-index:20;
+    display:flex; align-items:center; gap:0.7rem;
+    background:rgba(10,9,7,0.72);
+    border:1px solid rgba(212,175,95,0.28);
+    border-radius:3px;
+    padding:0.55rem 0.9rem;
+    backdrop-filter:blur(4px);
+  }
+  .music-toggle{
+    width:2rem; height:2rem; flex:none; border-radius:50%;
+    border:1px solid rgba(212,175,95,0.45); background:rgba(212,175,95,0.08);
+    color:var(--gold-bright); font-size:0.85rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background 0.3s ease;
+  }
+  .music-toggle:hover{ background:rgba(212,175,95,0.2); }
+  .music-info{ display:flex; flex-direction:column; gap:0.3rem; min-width:8.5rem; }
+  .music-track{ font-family:'Special Elite', monospace; font-size:0.68rem; letter-spacing:0.03em; color:rgba(236,224,196,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #volumeSlider{ width:100%; accent-color:var(--gold-bright); height:3px; }
+
+  @media (max-width:860px){
+    .music-widget{ right:0.6rem; bottom:0.6rem; padding:0.45rem 0.7rem; }
+    .music-info{ min-width:6.5rem; }
+  }
+
+  /* ---------- RWD ---------- */
+  @media (max-width:860px){
+    .layout{ grid-template-columns:1fr; }
+    .rail{
+      position:sticky; top:0; height:auto; width:100%;
+      flex-direction:row; align-items:center; gap:0;
+      padding:0.8rem 0.6rem; overflow-x:auto;
+      border-right:none; border-bottom:1px solid rgba(212,175,95,0.18);
+      background:rgba(10,10,10,0.55); backdrop-filter:blur(6px);
+      z-index:5;
+    }
+    .rail-title, .san-meter{ display:none; }
+    .rail-list{ flex-direction:row; gap:0.2rem; }
+    .rail-item{ padding:0.4rem 0.9rem; white-space:nowrap; }
+    .rail-item::before{ display:none; }
+    .rail-dot{ display:none; }
+    .cover{ min-height:70vh; }
+    .entry-dialogue{ max-width:100%; }
+  }
+</style>
+</head>
+<body data-scene="cover">
+
+<div class="scroll-nav">
+  <button class="scroll-btn" id="scrollTopBtn" aria-label="回到頂端" title="回到頂端">↑</button>
+  <button class="scroll-btn" id="scrollBottomBtn" aria-label="前往底部" title="前往底部">↓</button>
+</div>
+
+<div class="gate" id="gate">
+  <div class="gate-eyebrow">CASE FILE SEALED</div>
+  <button class="gate-btn" id="gateBtn">翻開卷宗，開始播放</button>
+  <p class="gate-note">瀏覽器規定音訊需在使用者操作後才能播放，點擊後將開啟隨場景切換的環境音樂。</p>
+</div>
+
+<div class="music-widget">
+  <button class="music-toggle" id="muteBtn" aria-label="靜音切換" title="靜音切換">♪</button>
+  <div class="music-info">
+    <div class="music-track" id="musicTrack">— 尚未播放 —</div>
+    <input type="range" id="volumeSlider" min="0" max="100" value="40" aria-label="音量">
+  </div>
+</div>
+
+<div class="bg-layer"></div>
+<div class="bg-grain"></div>
+<div class="bg-vignette"></div>
+
+<nav class="top-nav">
+  <a class="top-nav-btn" href="forgetmenot1.html">← 上一頁</a>
+  <a class="top-nav-btn top-nav-index" href="index.html">總覽 目錄</a>
+</nav>
+
+<div class="layout">
+  <!-- 左側：場景時間軸 + SAN 追蹤 -->
+  <nav class="rail">
+    <div class="rail-title">橋 段 目 錄</div>
+    <ul class="rail-list" id="railList"></ul>
+  </nav>
+
+  <!-- 右側：內容 -->
+  <main class="main">
+    <section class="cover" data-scene="cover">
+      <svg class="cover-seal" viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="46" stroke="#d4af5f" stroke-width="1"/>
+        <path d="M50 12 L83 68 L17 68 Z" stroke="#d4af5f" stroke-width="1" fill="none"/>
+        <circle cx="50" cy="55" r="12" stroke="#d4af5f" stroke-width="1" fill="none"/>
+        <circle cx="50" cy="55" r="3" fill="#d4af5f"/>
+      </svg>
+      <div class="cover-eyebrow">CALL OF CTHULHU · 團 錄</div>
+      <h1 class="cover-title">勿忘我</h1>
+      <p class="cover-desc">
+        你清晰地聽到自己的呼吸聲。<br>
+		四周異常的安靜，只有引擎在悄悄作響。你睜開眼睛，發現你所乘坐的車子翻車了，而周遭，是你不認得的面孔。<br>
+		你試圖回想這究竟是怎麼一回事，然而劇烈的頭疼阻斷你繼續探索你的記憶……<br>
+		——你發現，你連自己的身份都記不清了。
+		<br><br>
+		為了能找回記憶，弄清真相，你和你不認得的同伴們一起踏上了旅程……
+      </p>
+      <div class="cover-meta">
+        <span><b>KP</b>秦吟唱</span>
+        <span><b>PL</b>溫酒 / 慕煙 / 七葉 / 巴蒂 / 煬 / 歷程</span>
+        <span><b>初次團務</b>2026 / 08 / 13</span>
+        <span><b>規則</b>CoC 7th</span>
+      </div>
+    </section>
+	
+	<section class="characters" data-scene="characters">
+	  <div class="scene-header">
+      <div class="scene-tag">角色介紹</div>
+      <h2 class="scene-title">參與調查員</h2>
+    </div>
+    <div class="character-grid">
+    <div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/7g1Ti37JHMWxLQtoK0A0vL.png" alt="卡繆 · 福克斯">
+      <div class="character-name" style="color:#E6A08C">卡繆 · 福克斯</div>
+      <div class="character-role">音效工程師</div>
+      <p class="character-bio">音帶受損，很愛笑的大型犬。</p>
+    </div>
+    <div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/25zBoSztBIZeRz6sHo9CH2.png" alt="塞勒 · 弗洛斯特">
+      <div class="character-name" style="color:#75BD99">塞勒 · 弗洛斯特</div>
+      <div class="character-role">主持嘉賓 - 心理學家</div>
+      <p class="character-bio">少話，討厭吵鬧的地方，不過有看其他人被未知事物嚇到的惡趣味。</p>
+    </div>
+	<div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/584gt4LvuKVem3p7kmseXr.png" alt="維塔斯 · 卡爾德">
+      <div class="character-name" style="color:#9BABE0">維塔斯 · 卡爾德</div>
+      <div class="character-role">攝影師</div>
+      <p class="character-bio">看上去吊兒郎當的傢伙，但對世界保持著赤誠的好奇心。</p>
+    </div>
+	<div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/4xtKtx9VmkHd58VJ5TJe8A.png" alt="奧托 · 席爾維斯特">
+      <div class="character-name" style="color:#B0B0B0">奧托 · 席爾維斯特</div>
+      <div class="character-role">主持嘉賓 - 超自然專家</div>
+      <p class="character-bio">自來熟的大塊頭，似乎在玄學方面有相當的研究，但可靠性有待商榷。</p>
+    </div>
+	<div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/6eI9WTVxPvJ2eXrsbL90NE.png" alt="德里安 · 溫斯頓">
+      <div class="character-name" style="color:#00BCD4">德里安 · 溫斯頓</div>
+      <div class="character-role">主持人</div>
+      <p class="character-bio">肢體語言豐富，口才非常匹配自己的職業。</p>
+    </div>
+	<div class="character-card">
+      <img class="character-portrait" src="https://images.plurk.com/547yMydNur7P28nAMLJqu2.png" alt="諾倫 · 斯圖爾特">
+      <div class="character-name" style="color:#E9A368">諾倫 · 斯圖爾特</div>
+      <div class="character-role">主持嘉賓 - 科學專家</div>
+      <p class="character-bio">冷靜、禮貌，符合刻板印象的科學專家，但好像相信靈異事件的存在？</p>
+    </div>
+    <!-- 依此格式為其他四位角色各加一張卡片 -->
+    </div>
+	</section>
+
+    <div id="scenesRoot"></div>
+
+    <footer>— 終 —</footer>
+  </main>
+</div>
+
+<script>
+/* =========================================================
+   資料結構說明（之後要換成自己的團錄，只需要改這個陣列）
+   scenes: 一個橋段 = 一個場景（會切換背景與時間軸項目）
+     id        : 對應 body[data-scene] 與 CSS 場景色調
+     tag       : 時間軸上顯示的小標（如「序章」「第一章」）
+     title     : 場景標題
+     location  : 地點／時間戳
+     entries   : 該場景內的逐條紀錄，type 可為：
+        narration : 旁白／場景描述  { type, text }
+        dialogue  : 對話            { type, speaker, color, text, isKP? }
+        roll      : 擲骰／檢定紀錄  { type, text, success, sanDelta? }
+   ========================================================= */
+const CHARACTER_AVATARS = {
+  '卡繆 · 福克斯': 'https://images.plurk.com/7g1Ti37JHMWxLQtoK0A0vL.png',
+  '塞勒 · 弗洛斯特': 'https://images.plurk.com/25zBoSztBIZeRz6sHo9CH2.png',
+  '維塔斯 · 卡爾德': 'https://images.plurk.com/584gt4LvuKVem3p7kmseXr.png',
+  '奧托 · 席爾維斯特': 'https://images.plurk.com/4xtKtx9VmkHd58VJ5TJe8A.png',
+  '德里安 · 溫斯頓': 'https://images.plurk.com/6eI9WTVxPvJ2eXrsbL90NE.png',
+  '諾倫 · 斯圖爾特': 'https://images.plurk.com/547yMydNur7P28nAMLJqu2.png',
+  '貝克先生': 'https://images.plurk.com/5FKbTMs3DaAM0nopFYDzfX.png',
+  '貝克夫人': 'https://images.plurk.com/7zoZSveD6Z1QmI3L8EAErE.png',
+};
+   
+const SCENES = [
+  {
+    id:'house', tag:'抵達', title:'落腳處', location:'農舍',
+    music:{ wave:'sine', freq:48, detune:3, filterFreq:450, noise:false, lfoRate:0.05, lfoDepth:40, extraHarmonic:true, label:'第二章 · 密室共鳴' },
+    entries:[
+      {type:'dialogue', speaker:'KP', isKP:true, text:'……'},
+      {type:'dialogue', speaker:'KP', isKP:true, text:'你們沿著公路走了很長一段時間。在這半小時內，只有一輛紅色的福特野馬在你們身邊掠過，而且對你們沒有絲毫的關心。在聽見那輛車疾馳而過並漸漸遠去的風聲後，剩下的只有雷聲和雨聲。'},
+      {type:'dialogue', speaker:'KP', isKP:true, text:'你們繼續往前走，公路旁延伸出兩條光禿禿的土徑，在黑夜下勉強能看得出這是車輪常年行駛而攆出來的，直達你們看到的那棟農舍。你們踏步而去，又走了幾分鐘，終於來農舍的門前。農舍算不上大，周圍的雜草東一塊西一塊的，主人在這方面上似乎沒有下太大的功夫。房子的四面墻上都有幾扇窗戶，雖然能看到裡頭透出來的光，但窗簾仍然兢兢業業地恪守原地，你們無法看到裡頭的狀況。'},
+      {type:'dialogue', speaker:'KP', isKP:true, text:'這附近就只有這一棟建築，路上的車也不多，除了一開始就一直伴隨你們的雷聲和雨聲，你們還聽到蟋蟀的唧唧聲，這些蟋蟀似乎都在這棟農舍找到了避雨處，歡快地叫著。'},
+      {type:'dialogue', speaker:'KP', isKP:true, text:'農舍內隱隱有一些聲響，仔細聽的話，能聽見疑似是電視節目播放的聲音。在外頭無法判斷裡頭住著什麼人。'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'看著大家站著在那瞧，聽見有聲音他抬起手握成拳在門上敲了敲。<br><br>「嘿——有人在嗎？玉米田沒看見人應該在，您好？你好——？女士先生？」'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'德里安敲響了農舍的房門。<br><br>房子內的電視節目還在播放，但始終沒有人來開門。在等了好一陣子、你們幾乎快相信沒有人會來應門的時候，農舍的門打開了。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'來應門的是一個標准身高的男人，頭頂上的頭髮像粉末一樣零星四散，肚子則以將衣服撐得變形為榮。他的手臂上附著毛髮，和那圓鼓鼓的肚子相比，顯得格外強壯。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'他看起來至少有 50 歲，在看見你們一群人渾身濕透、可憐兮兮地站在他的門前時，他露出了不快的表情。'},
+	  {type:'dialogue', speaker:'貝克先生', color:'#9E9E9E', text:'「現在難道流行集體行乞嗎？」'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'德里安藍色的眼眸迅速地以笑意掩上。<br><br>「哦不我們不是，先生。哇——您真高大，也是那片玉米田種的那麼好，主人想必也有一番能力。我好久沒看見種那麼大一片的玉米田了！」他嘰哩呱拉的好長一串，好看的面容上帶著笑。兩手舉了起來說到玉米田時手畫了好大一圈。<br><br>「話又說回來——我們離旅館太遠了想問能不能借住一晚呢？就一晚！我們很安靜的！」'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'聽到你說的話，那位先生瞇了瞇眼睛，顯然還不是很相信你們。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'德里安【話術 / 說服】'},
+	  {type:'roll', text:'【德里安 · 溫斯頓】說服 檢定 CC ≤ 70 → 擲出2', success:true},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'或許是你說的話正好都誇到他的心頭上了，那位先生在瞇了瞇眼後鬆了一口氣，你們這才發現他的右手握著一把霰彈槍，藏在門框後。'},
+	  {type:'dialogue', speaker:'貝克先生', color:'#9E9E9E', text:'「……我得先徵求我太太的同意。」'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'你們的對話將房子的女主人引了過來。女主人比男人要矮一些，那頭短髮的髮量卻比她的丈夫要多多了，只不過這些勝利的頭髮大部分都已經花白，讓她看上去要比她的丈夫要更年邁一些。幸運的是，她似乎比她的丈夫要和藹，看見你們渾身濕透的樣子，她皺著眉毛，露出擔憂的表情。'},
+	  {type:'dialogue', speaker:'貝克夫人', color:'#9E9E9E', text:'「噢，天啊！你們這群小可憐發生什麼事了？快進來，外面太冷了。」'},
+	  {type:'roll', text:'【卡繆 · 福克斯】信譽 檢定 CC ≤ 40 → 擲出 29，一般成功。', success:true},
+      {type:'roll', text:'【維斯塔 · 卡爾德】信譽 檢定 CC ≤ 20 → 擲出 62，失敗。', success:false},
+      {type:'roll', text:'【奧托 · 席爾維斯特】信譽 檢定 CC ≤ 40 → 擲出 24，一般成功。', success:true},
+      {type:'roll', text:'【德里安 · 溫斯頓】信譽 檢定 CC ≤ 50 → 擲出 62，失敗。', success:false},
+	  {type:'roll', text:'【諾倫 · 斯圖爾特】信譽 檢定 CC ≤ 30 → 擲出 61，失敗。', success:false},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'那位女士說完話後，瞇著眼睛看向你們，似乎是在確認你們的長相，在看到奧托和卡繆的臉的時候，她睜了睜眼睛。'},
+	  {type:'dialogue', speaker:'貝克夫人', color:'#9E9E9E', text:'「你們……是不是上過節目？」'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'想了想，把卡繆最標誌性的東西從腦袋上摘下來，還給對方。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'正在重新給自己編頭髮的卡繆愣了一下，隨手把辮子做了收尾，然後接過了帽子把標誌性的物品戴回了自己的腦袋上。<br><br>彎著腰、笑瞇瞇的對著夫人比了一個耶。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'「女士您認得我們嗎 ?」聽見疑似認出誰來的聲音奧托從德里安身後探出腦袋，開啟了職業模式。<br><br>「是的，我是超自然專家，」視線在女人和男人身上掃了掃，接著揚起微笑，「天哪我看兩位周遭的氣息溫和且陽光，這做不得假。」 '},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'這時，女士似乎想起了什麼，對她的丈夫小聲地說了幾句話。<br><br>距離不遠，而且老人家畢竟耳朵不好，說話的聲音也沒壓得太低。'},
+	  {type:'dialogue', speaker:'貝克夫人', color:'#9E9E9E', text:'「是給我們打過電話的節目組嗎？」'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'那位先生似乎有些驚訝，瞄了你們一眼，又看向他的太太，「或許，」他說。'},
+	  {type:'dialogue', speaker:'貝克夫人', color:'#9E9E9E', text:'「請進來吧，外面太冷了。」'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'在女主人的邀請下，你們總算進到房子中。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'這棟農舍稱不上很大，對兩位上了年紀的老夫婦來說，倒是挺溫馨的。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'那位先生把霰彈槍掛回墻上，領著你們坐在只能三個人的沙發上，剩下的幾個人只能席地而坐。'},
+	  {type:'dialogue', speaker:'貝克先生', color:'#9E9E9E', text:'「抱歉，這裡不常有人來。」'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'女主人在你們進來後便緩緩地走到房子另一個空間內，接著拿了幾條毛巾出來給你們擦拭。'},
+	  {type:'dialogue', speaker:'維塔斯 · 卡爾德', color:'#8F9DCF', text:'很自覺的坐到地上的維塔斯從貝克夫人手上接過了毛巾，笑瞇瞇地朝她道謝。「感謝您，善良的女士。」<br><br>「也謝謝您願意收留我們，好心的先生。」'},
+	  {type:'dialogue', speaker:'貝克先生', color:'#9E9E9E', text:'貝克先生哼了一聲，坐到另一個單人沙發上。'},
+	  {type:'dialogue', speaker:'諾倫 · 斯圖爾特', color:'#E9A368', text:'「感謝二位。」接過毛巾後，將濕漉漉的地方輕輕擦過，避免著涼感冒。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆接過後先把自己的臉埋入了柔軟的毛巾裡，才開始慢慢擦身上濕掉的地方。'},
+	  {type:'dialogue', speaker:'塞勒 · 弗洛斯特', color:'#38805b', text:'塞勒伸手將自己的帽子拉了下來，將遮擋視線的瀏海梳了上去，低聲地道了句謝便接過了毛巾。'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'接過毛巾，奧托自然的坐在了地上，慢慢擦拭著身上淋濕的地方。<br>「謝謝。」'},
+	  {type:'dialogue', speaker:'德里安 · 溫斯頓', color:'#00BCD4', text:'「謝謝二位。」他用著毛巾擦過臉頰才去擦拭頭髮，幸虧是被收留了不然都要在外頭泡水了。'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'把毛巾給了你們後，女主人又去搗鼓了些什麼，走出來時托盤上多了幾個杯子，杯子裡有些深色的液體，大概率是紅茶，茶包泡的，冒著白煙。'},
+	  {type:'dialogue', speaker:'貝克夫人', color:'#9E9E9E', text:'「這裡，嚐點這個。我兒子帶回來的紅茶。」'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'男主人抬高頭看著你們，雙手抱胸，食指在手臂上點了點。'},
+	  {type:'dialogue', speaker:'貝克先生', color:'#9E9E9E', text:'「所以，你們可以解釋一下，你們為什麼會出現在這裡嗎？還是以這種狼狽的模樣……這難道是你們節目錄製的內容之一？」'},
+	  {type:'dialogue', speaker:'奧托 · 席爾維斯特', color:'#787878', text:'「這個嗎......」奧托將微濕的頭髮稍微向後撥，一時有些難以解釋。<br><br>「聽起來或許有點荒謬，但我們是因為車翻了才走到這裡的。」'},
+	  {type:'dialogue', speaker:'貝克先生', color:'#9E9E9E', text:'他皺眉，難以置信地瞇眼。<br><br>「這條路我開了幾十年，從未翻車過，你們可真是天賦異稟。」'},
+	  {type:'dialogue', speaker:'貝克夫人', color:'#9E9E9E', text:'「休。」<br><br>女主人瞪了她的丈夫一眼，男主人便不再說話，抱著胸看向別處。<br><br>「他一直都是這副樣子，你們不要介意。這裡離鎮子有點遠，你們是準備出城嗎？你們的節目怎麼樣了？我記得你們在……」'},
+	  {type:'dialogue', speaker:'KP', isKP:true, text:'說到一半，她止住了嘴，猶豫了一下，似乎並不打算把話說完，重新看向你們。'},
+	  {type:'dialogue', speaker:'卡繆 · 福克斯', color:'#D0826C', text:'卡繆從後背包裡抽出來紙筆，先是畫了一個哭臉表達了自己在一路上都很委屈，帽簷下紫色的眼睛也跟著垂了下來。<br><br>接著他寫下了：「夫人，請問怎麼了嗎？您好像還有想說的。」'},
+    ]
+  },
+];
+
+const MAX_SAN = 65;
+
+const railList = document.getElementById('railList');
+const scenesRoot = document.getElementById('scenesRoot');
+const body = document.body;
+
+/* 建立時間軸 + 場景區塊 */
+SCENES.forEach((scene, i) => {
+  const li = document.createElement('li');
+  li.className = 'rail-item';
+  li.dataset.scene = scene.id;
+  li.innerHTML = `
+    <span class="rail-dot"></span>
+    <button class="rail-btn" data-target="${scene.id}">
+      <span class="tag">${scene.tag}</span>${scene.title}
+    </button>`;
+  railList.appendChild(li);
+
+  const section = document.createElement('section');
+  section.className = 'scene-section';
+  section.id = scene.id;
+  section.dataset.scene = scene.id;
+
+  const entriesHTML = scene.entries.map(e => {
+    if (e.type === 'narration') {
+      return `<div class="entry-narration">${e.text}</div>`;
+    }
+    if (e.type === 'dialogue') {
+	  const style = e.isKP ? '' : `style="color:${e.color}"`;
+	  const avatarSrc = e.avatar || CHARACTER_AVATARS[e.speaker];
+	  const avatarHTML = avatarSrc ? `<img class="entry-avatar" src="${avatarSrc}" alt="${e.speaker}">` : '';
+	  const contentHTML = e.image
+    ? `<img class="dialogue-image" src="${e.image}" alt="${e.speaker}">`
+    : `<div class="dialogue-text">${e.text}</div>`;
+  return `
+    <div class="dialogue-row ${e.isKP ? 'is-kp' : ''}">
+      ${avatarHTML}
+      <div class="entry-dialogue ${e.isKP ? 'is-kp' : ''}">
+        <div class="speaker" ${e.isKP ? '' : style}>${e.speaker}</div>
+        ${contentHTML}
+      </div>
+    </div>`;
+	}
+    if (e.type === 'roll') {
+  const sanHTML = (e.sanDelta !== undefined) ? `<span class="san-delta">SAN ${e.sanDelta}</span>` : '';
+
+  // 優先用手動指定的 target / roll，沒有的話從 text 裡自動解析「CC ≤ 數字」與「擲出 數字」
+  let target = e.target;
+  let roll = e.roll;
+  if (target === undefined || roll === undefined) {
+    const targetMatch = e.text.match(/CC\s*≤\s*(\d+)/);
+    const rollMatch = e.text.match(/擲出\s*(\d+)/);
+    if (targetMatch) target = parseInt(targetMatch[1], 10);
+    if (rollMatch) roll = parseInt(rollMatch[1], 10);
+  }
+
+  let isCrit = false;
+  if (target !== undefined && roll !== undefined) {
+    isCrit = target >= 50 ? roll <= 5 : roll === 1;
+  }
+
+  const critHTML = isCrit ? `<span class="crit-badge">大成功</span>` : '';
+  return `<div class="entry-roll ${e.success ? '' : 'fail'} ${isCrit ? 'crit' : ''}">${e.text}${sanHTML}${critHTML}</div>`;
+}
+  }).join('');
+
+  section.innerHTML = `
+    <div class="divider">${scene.tag}</div>
+    <div class="scene-header">
+      <div class="scene-tag">${scene.tag}</div>
+      <h2 class="scene-title">${scene.title}</h2>
+      <div class="scene-loc">${scene.location}</div>
+    </div>
+    <div class="entries">${entriesHTML}</div>`;
+
+  scenesRoot.appendChild(section);
+});
+
+/* =========================================================
+   音訊引擎：純 Web Audio 合成的環境音，不需外部音檔即可自動播放。
+   每個場景的 music 參數決定音色；music 為 null/省略時不切換，
+   沿用目前正在播放的音樂（用於「換場景但不換音樂」的情況）。
+   若想改播真實 mp3，把場景的 music 換成 {type:'file', url:'...', label:'...'}，
+   goToSceneMusic() 下方已預留 file 分支。
+   ========================================================= */
+const SCENES_BY_ID = Object.fromEntries(SCENES.map(s => [s.id, s]));
+
+SCENES_BY_ID.cover = {
+  id:'cover',
+  title:'封面',
+  music:{ type:'file', url:'Laufey.mp3', label:'Laufey - Forget-me-not' }
+};
+SCENES_BY_ID.characters = {
+  id:'characters',
+  title:'角色介紹',
+  music:null   // null＝沿用封面的音樂繼續播放，不切換；想換成別的就填 music 物件
+};
+
+let audioCtx = null;
+let masterGain = null;
+let currentAmbience = null;
+let volume = 0.4;
+let muted = false;
+
+function buildSynthAmbience(params){
+  const output = audioCtx.createGain();
+  output.gain.value = 0;
+  output.connect(masterGain);
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = params.filterFreq || 800;
+  filter.Q.value = 0.7;
+  filter.connect(output);
+
+  const nodes = [];
+  const detunes = params.detune ? [0, params.detune, -params.detune] : [0];
+  detunes.forEach((det, i) => {
+    const osc = audioCtx.createOscillator();
+    osc.type = params.wave || 'sine';
+    osc.frequency.value = params.freq || 55;
+    osc.detune.value = det;
+    const oGain = audioCtx.createGain();
+    oGain.gain.value = i === 0 ? 0.5 : 0.22;
+    osc.connect(oGain); oGain.connect(filter); osc.start();
+    nodes.push(osc);
+  });
+
+  if (params.extraHarmonic) {
+    const osc2 = audioCtx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.value = (params.freq || 55) * 1.5;
+    const g2 = audioCtx.createGain(); g2.gain.value = 0.15;
+    osc2.connect(g2); g2.connect(filter); osc2.start();
+    nodes.push(osc2);
+  }
+
+  const lfo = audioCtx.createOscillator();
+  lfo.frequency.value = params.lfoRate || 0.1;
+  const lfoGain = audioCtx.createGain();
+  lfoGain.gain.value = params.lfoDepth || 50;
+  lfo.connect(lfoGain); lfoGain.connect(filter.frequency); lfo.start();
+  nodes.push(lfo);
+
+  if (params.noise) {
+    const bufferSize = audioCtx.sampleRate * 2;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noiseSrc = audioCtx.createBufferSource();
+    noiseSrc.buffer = buffer; noiseSrc.loop = true;
+    const noiseFilter = audioCtx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = params.noiseFilter || 1000;
+    noiseFilter.Q.value = 0.8;
+    const noiseGain = audioCtx.createGain(); noiseGain.gain.value = 0.12;
+    noiseSrc.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(filter);
+    noiseSrc.start();
+    nodes.push(noiseSrc);
+  }
+
+  return {
+    output,
+    stop(){ nodes.forEach(n => { try { n.stop(); } catch (e) {} }); }
+  };
+}
+
+function buildFileAmbience(url){
+  const audioEl = new Audio(url);
+  audioEl.loop = true;
+  const src = audioCtx.createMediaElementSource(audioEl);
+  const output = audioCtx.createGain();
+  output.gain.value = 0;
+  src.connect(output); output.connect(masterGain);
+  audioEl.play().catch(e => console.error('音樂播放失敗：', e));
+  return { output, stop(){ audioEl.pause(); audioEl.src = ''; } };
+}
+
+function goToSceneMusic(scene){
+  if (!audioCtx || !scene || scene.music === null || scene.music === undefined) return; // 不切換，沿用目前音樂
+  const m = scene.music;
+  const newAmb = m.type === 'file' ? buildFileAmbience(m.url) : buildSynthAmbience(m);
+  const now = audioCtx.currentTime;
+  newAmb.output.gain.cancelScheduledValues(now);
+  newAmb.output.gain.setValueAtTime(0, now);
+  newAmb.output.gain.linearRampToValueAtTime(muted ? 0 : volume, now + 2.2);
+
+  if (currentAmbience) {
+    const old = currentAmbience;
+    old.output.gain.cancelScheduledValues(now);
+    old.output.gain.setValueAtTime(old.output.gain.value, now);
+    old.output.gain.linearRampToValueAtTime(0, now + 2.2);
+    setTimeout(() => old.stop(), 2400);
+  }
+  currentAmbience = newAmb;
+  document.getElementById('musicTrack').textContent = m.label || scene.title;
+}
+
+/* 開場遮罩：瀏覽器要求先有一次使用者操作才能出聲 */
+document.getElementById('gateBtn').addEventListener('click', () => {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = volume;
+    masterGain.connect(audioCtx.destination);
+  }
+  audioCtx.resume();
+  goToSceneMusic(SCENES_BY_ID[body.dataset.scene] || SCENES[0]);
+  const gate = document.getElementById('gate');
+  gate.classList.add('gate-hidden');
+  setTimeout(() => gate.remove(), 1000);
+});
+
+/* 播放器控制：靜音切換 + 音量 */
+const muteBtn = document.getElementById('muteBtn');
+muteBtn.addEventListener('click', () => {
+  muted = !muted;
+  muteBtn.textContent = muted ? '✕' : '♪';
+  if (masterGain) {
+    const now = audioCtx.currentTime;
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.linearRampToValueAtTime(muted ? 0 : volume, now + 0.4);
+  }
+});
+document.getElementById('volumeSlider').addEventListener('input', (e) => {
+  volume = e.target.value / 100;
+  if (masterGain && !muted) masterGain.gain.value = volume;
+});
+
+/* 場景切換：進入視窗時換背景、高亮時間軸、並嘗試切換音樂 */
+const sceneSections = document.querySelectorAll('.scene-section, .cover, .characters');
+const railItems = document.querySelectorAll('.rail-item');
+
+const sceneObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.dataset.scene;
+      body.dataset.scene = id;
+      railItems.forEach(li => li.classList.toggle('active', li.dataset.scene === id));
+      goToSceneMusic(SCENES_BY_ID[id]);
+    }
+  });
+}, { threshold: 0, rootMargin: '-40% 0px -55% 0px' });
+
+sceneSections.forEach(s => sceneObserver.observe(s));
+
+document.querySelectorAll('.rail-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById(btn.dataset.target).scrollIntoView({ behavior:'smooth' });
+  });
+});
+
+const scrollTopBtn = document.getElementById('scrollTopBtn');
+const scrollBottomBtn = document.getElementById('scrollBottomBtn');
+
+function updateScrollButtons(){
+  const scrolled = window.scrollY > 300;
+  scrollTopBtn.classList.toggle('visible', scrolled);
+
+  const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 300;
+  scrollBottomBtn.classList.toggle('visible', !nearBottom);
+}
+window.addEventListener('scroll', updateScrollButtons, { passive:true });
+updateScrollButtons();
+
+scrollTopBtn.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+scrollBottomBtn.addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' }));
+</script>
+</body>
+</html>
