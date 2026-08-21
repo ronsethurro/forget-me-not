@@ -573,7 +573,7 @@ const SCENES = [
   },
   {
     id:'manor', tag:'甦醒', title:'不熟悉的夜晚', location:'廂式貨車上',
-    music:{ label:'……' },
+    music:{ type:'file', url:'car.mp3', label:'……' },
     entries:[
       {type:'dialogue', speaker:'KP', isKP:true, text:'……'},
       {type:'dialogue', speaker:'KP', isKP:true, text:'睜開眼。'},
@@ -687,7 +687,7 @@ const SCENES = [
   },
   {
     id:'road', tag:'下車', title:'翻倒的運氣', location:'未知馬路旁',
-    music:{ wave:'sine', freq:48, detune:3, filterFreq:450, noise:false, lfoRate:0.05, lfoDepth:40, extraHarmonic:true, label:'第二章 · 密室共鳴' },
+    music:{ type:'file', url:'somethingintheway.mp3', label:'Nirvana - Something In The Way' },
     entries:[
       {type:'dialogue', speaker:'KP', isKP:true, text:'……'},
       {type:'dialogue', speaker:'KP', isKP:true, text:'打開車門，踏上土地。'},
@@ -728,8 +728,6 @@ const SCENES = [
     ]
   },
 ];
-
-const MAX_SAN = 65;
 
 const railList = document.getElementById('railList');
 const scenesRoot = document.getElementById('scenesRoot');

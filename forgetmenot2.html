@@ -476,7 +476,11 @@
 
     <div id="scenesRoot"></div>
 
-    <footer>— 終 —</footer>
+    <footer>
+	— 本頁就此告一段落 —
+	<div style="margin-top:1rem;">
+    </div>
+	</footer>
   </main>
 </div>
 
@@ -507,7 +511,7 @@ const CHARACTER_AVATARS = {
 const SCENES = [
   {
     id:'house', tag:'抵達', title:'落腳處', location:'農舍',
-    music:{ wave:'sine', freq:48, detune:3, filterFreq:450, noise:false, lfoRate:0.05, lfoDepth:40, extraHarmonic:true, label:'第二章 · 密室共鳴' },
+    music:{ type:'file', url:'cricket.mp3', label:'……' },
     entries:[
       {type:'dialogue', speaker:'KP', isKP:true, text:'……'},
       {type:'dialogue', speaker:'KP', isKP:true, text:'你們沿著公路走了很長一段時間。在這半小時內，只有一輛紅色的福特野馬在你們身邊掠過，而且對你們沒有絲毫的關心。在聽見那輛車疾馳而過並漸漸遠去的風聲後，剩下的只有雷聲和雨聲。'},
@@ -565,8 +569,6 @@ const SCENES = [
     ]
   },
 ];
-
-const MAX_SAN = 65;
 
 const railList = document.getElementById('railList');
 const scenesRoot = document.getElementById('scenesRoot');
